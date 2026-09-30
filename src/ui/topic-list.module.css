@@ -1,0 +1,26 @@
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  padding-block: 1.75rem;
+  border-top: 1px solid var(--line);
+}
+
+.link {
+  display: block;
+  color: var(--ink);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.link:hover {
+  color: var(--link);
+}
+
+.summary {
+  margin-top: 0.875rem;
+  color: var(--muted);
+}

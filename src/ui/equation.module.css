@@ -1,0 +1,33 @@
+.equation {
+  display: block;
+  font-family: var(--font-display);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.hero {
+  font-size: clamp(2.25rem, 1.35rem + 4.5vw, 4rem);
+}
+
+.row {
+  font-size: clamp(1.625rem, 1.25rem + 1.9vw, 2.25rem);
+}
+
+.term {
+  display: block;
+  font-weight: 700;
+}
+
+.analogy {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.3em;
+  margin-top: 0.08em;
+  font-weight: 300;
+}
+
+.sign {
+  color: var(--brand);
+  font-weight: 700;
+}

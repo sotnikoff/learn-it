@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { orNotFound } from "@/app/_lib/or-not-found";
 import { getLesson, getTopic, listTopics } from "@/composition/container";
 import { LessonNav } from "@/ui/lesson-nav";
@@ -24,16 +23,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function LessonPage({ params }: Props) {
   const { topicSlug, lessonSlug } = await params;
-  const { topic, lesson, previous, next } = await orNotFound(
+  const { topic, lesson, previous, next, position, total } = await orNotFound(
     getLesson(topicSlug, lessonSlug),
   );
 
   return (
     <>
-      <p>
-        <Link href={`/topics/${topic.slug}`}>{topic.title}</Link>
-      </p>
-      <LessonView lesson={lesson} />
+      <LessonView topic={topic} lesson={lesson} position={position} total={total} />
       <LessonNav topicSlug={topic.slug} previous={previous} next={next} />
     </>
   );

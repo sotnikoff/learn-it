@@ -1,20 +1,21 @@
 import Link from "next/link";
 import type { TopicSummary } from "@/domain/topic";
+import { Equation } from "./equation";
+import styles from "./topic-list.module.css";
 
 export function TopicList({ topics }: { topics: TopicSummary[] }) {
   if (topics.length === 0) return <p>Тем пока нет.</p>;
 
   return (
-    <ul>
+    <ul className={styles.list}>
       {topics.map((topic) => (
-        <li key={topic.slug}>
+        <li key={topic.slug} className={styles.item}>
           <h3>
-            <Link href={`/topics/${topic.slug}`}>{topic.title}</Link>
+            <Link href={`/topics/${topic.slug}`} className={styles.link}>
+              <Equation term={topic.title} analogy={topic.analogy} size="row" />
+            </Link>
           </h3>
-          <p>
-            <strong>Аналогия:</strong> {topic.analogy}
-          </p>
-          <p>{topic.summary}</p>
+          <p className={styles.summary}>{topic.summary}</p>
         </li>
       ))}
     </ul>

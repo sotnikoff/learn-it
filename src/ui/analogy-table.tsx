@@ -1,11 +1,12 @@
 import type { AnalogyPair } from "@/domain/lesson";
+import styles from "./analogy-table.module.css";
 
 export function AnalogyTable({ pairs }: { pairs: AnalogyPair[] }) {
   if (pairs.length === 0) return null;
 
   return (
-    <table>
-      <caption>Словарик аналогии</caption>
+    <table className={styles.table}>
+      <caption className={styles.caption}>Словарик аналогии</caption>
       <thead>
         <tr>
           <th scope="col">В технологии</th>

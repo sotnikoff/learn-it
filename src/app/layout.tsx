@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import type { ReactNode } from "react";
+import { SiteFooter } from "@/ui/site-footer";
+import { SiteHeader } from "@/ui/site-header";
+import { ThemeScript } from "@/ui/theme-script";
+import { bodyFont, displayFont } from "./fonts";
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: { default: "Проще говоря", template: "%s — Проще говоря" },
@@ -9,19 +13,19 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="ru">
+    // data-theme ставит ThemeScript до гидрации, поэтому расхождение атрибутов ожидаемо.
+    <html
+      lang="ru"
+      className={`${displayFont.variable} ${bodyFont.variable}`}
+      suppressHydrationWarning
+    >
+      <head>
+        <ThemeScript />
+      </head>
       <body>
-        <header>
-          <nav aria-label="Основная навигация">
-            <Link href="/">Проще говоря</Link>
-          </nav>
-        </header>
-        <hr />
-        <main>{children}</main>
-        <hr />
-        <footer>
-          <p>Сложные ИТ-темы — человеческим языком.</p>
-        </footer>
+        <SiteHeader />
+        <main className="container">{children}</main>
+        <SiteFooter />
       </body>
     </html>
   );

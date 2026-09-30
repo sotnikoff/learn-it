@@ -8,6 +8,9 @@ export type LessonInContext = {
   lesson: Lesson;
   previous: LessonSummary | null;
   next: LessonSummary | null;
+  /** Номер урока в теме, считая с 1. */
+  position: number;
+  total: number;
 };
 
 export const makeGetLesson =
@@ -26,5 +29,7 @@ export const makeGetLesson =
       lesson,
       previous: topic.lessons[index - 1] ?? null,
       next: topic.lessons[index + 1] ?? null,
+      position: index + 1,
+      total: topic.lessons.length,
     };
   };

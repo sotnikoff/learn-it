@@ -1,0 +1,56 @@
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: lesson;
+}
+
+.item {
+  counter-increment: lesson;
+  border-top: 1px solid var(--line);
+}
+
+.link {
+  display: grid;
+  grid-template-columns: 2.75rem 1fr;
+  margin-inline: -0.75rem;
+  padding: 0.9375rem 0.75rem;
+  border-radius: var(--radius);
+  color: var(--ink);
+  text-decoration: none;
+  transition: background-color 0.15s;
+}
+
+.link:hover {
+  background: var(--tint);
+}
+
+.link::before {
+  content: counter(lesson);
+  grid-row: span 2;
+  color: var(--link);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 300;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+
+.title,
+.analogy {
+  grid-column: 2;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+.analogy {
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.5;
+}

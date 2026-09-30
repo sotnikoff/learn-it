@@ -1,0 +1,146 @@
+/*
+ * Токены оформления. Каждый цвет задан парой «день / ночь» через light-dark():
+ * какая половина пары работает, решает color-scheme.
+ *   — по умолчанию `light dark`: тема берётся из настроек ОС;
+ *   — data-theme на <html> (ставит переключатель) фиксирует тему вручную.
+ */
+:root {
+  color-scheme: light dark;
+
+  --bg: light-dark(#faf8ff, #17132a);
+  --surface: light-dark(#ffffff, #211c3a);
+  --ink: light-dark(#2a2440, #ece8ff);
+  --muted: light-dark(#6b6485, #a69fc4);
+  --brand: light-dark(#a594f9, #b9a9ff);
+  --on-brand: #1f1a36;
+  --link: light-dark(#6d55d9, #c4b7ff);
+  --tint: light-dark(#eee9ff, #2c2550);
+  --line: light-dark(#e1daf7, #382f63);
+
+  --font-display: var(--font-geologica), system-ui, sans-serif;
+  --font-body: var(--font-literata), Georgia, serif;
+
+  --measure: 42rem;
+  --gutter: 1.25rem;
+  --radius: 0.75rem;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1.125rem;
+  line-height: 1.7;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+
+main {
+  flex: 1;
+  padding-block: 3.5rem 5rem;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+h2 {
+  font-size: 1.625rem;
+}
+
+p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+a {
+  color: var(--link);
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.2em;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+  transition: text-decoration-color 0.15s;
+}
+
+a:hover {
+  text-decoration-color: currentColor;
+}
+
+:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 3px;
+  border-radius: 0.25rem;
+}
+
+::selection {
+  background: var(--brand);
+  color: var(--on-brand);
+}
+
+.container {
+  width: 100%;
+  max-width: calc(var(--measure) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.lede {
+  margin-top: 1.5rem;
+  font-size: clamp(1.1875rem, 1.1rem + 0.5vw, 1.3125rem);
+  line-height: 1.55;
+}
+
+.section-title {
+  margin-top: 3.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+  }
+}
