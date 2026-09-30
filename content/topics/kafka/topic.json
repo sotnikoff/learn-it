@@ -1,0 +1,17 @@
+{
+  "title": "Apache Kafka",
+  "analogy": "Почта России",
+  "summary": "Kafka — это почта для программ: одни сервисы сдают сообщения, другие забирают их, когда им удобно. Разбираем по шагам, кто здесь отправитель, где окошки и зачем нужен журнал выдачи.",
+  "lessons": [
+    "what-is-kafka",
+    "topic",
+    "partition",
+    "producer",
+    "consumer",
+    "consumer-group",
+    "offset",
+    "broker-and-cluster",
+    "replication",
+    "retention"
+  ]
+}
