@@ -1,0 +1,19 @@
+{
+  "title": "PostgreSQL изнутри",
+  "analogy": "Большая библиотека",
+  "summary": "Как PostgreSQL принимает запрос, где и в каком виде лежат данные и почему он не теряет их при сбое. Разбираем внутреннюю кухню на примере библиотеки: кто встречает читателя, как устроены полки и каталог, зачем журнал и кто наводит порядок по ночам.",
+  "lessons": [
+    "overview",
+    "processes",
+    "query-lifecycle",
+    "planner",
+    "pages-and-heap",
+    "toast",
+    "indexes",
+    "buffer-cache",
+    "wal",
+    "checkpoint",
+    "mvcc",
+    "vacuum"
+  ]
+}

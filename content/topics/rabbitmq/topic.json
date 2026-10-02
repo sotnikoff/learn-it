@@ -1,0 +1,17 @@
+{
+  "title": "RabbitMQ",
+  "analogy": "Диспетчерская такси",
+  "summary": "RabbitMQ — диспетчерская для программ: принимает задания и раздаёт их исполнителям по правилам. Разбираем, кто здесь диспетчер, как заказ попадает к нужному водителю и что бывает, если водитель пропал посреди поездки.",
+  "lessons": [
+    "what-is-rabbitmq",
+    "queue",
+    "exchange",
+    "binding-and-routing-key",
+    "exchange-types",
+    "consumer-and-ack",
+    "prefetch",
+    "durability",
+    "dead-letter",
+    "rabbitmq-vs-kafka"
+  ]
+}

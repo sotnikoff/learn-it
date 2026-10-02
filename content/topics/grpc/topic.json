@@ -1,0 +1,17 @@
+{
+  "title": "gRPC",
+  "analogy": "Заказ по телефону в пиццерии",
+  "summary": "gRPC — способ, которым одна программа «звонит» другой и заказывает действие по заранее согласованному меню. Разбираем, что тут меню, почему разговор идёт кодами и что делать, если пиццу везут слишком долго.",
+  "lessons": [
+    "what-is-grpc",
+    "protobuf",
+    "serialization",
+    "stub",
+    "http2",
+    "streaming",
+    "deadline",
+    "status-codes",
+    "schema-evolution",
+    "grpc-vs-rest"
+  ]
+}

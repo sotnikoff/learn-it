@@ -1,0 +1,17 @@
+{
+  "title": "Транзакции и блокировки",
+  "analogy": "Кассы кинотеатра с общей схемой зала",
+  "summary": "Как база данных не даёт двум людям купить одно и то же место и не теряет деньги при сбое. Разбираем на примере кинотеатра, где несколько кассиров продают билеты по одной общей схеме зала.",
+  "lessons": [
+    "what-is-transaction",
+    "acid",
+    "read-anomalies",
+    "lost-update-and-write-skew",
+    "isolation-levels",
+    "row-locks",
+    "select-for-update",
+    "table-locks",
+    "deadlock",
+    "optimistic-locking"
+  ]
+}
