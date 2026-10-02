@@ -2,6 +2,7 @@ import path from "node:path";
 import type { ContentRepository } from "@/application/ports/content-repository";
 import { makeGetLesson } from "@/application/use-cases/get-lesson";
 import { makeGetTopic } from "@/application/use-cases/get-topic";
+import { makeListCategories } from "@/application/use-cases/list-categories";
 import { makeListTopics } from "@/application/use-cases/list-topics";
 import { JsonContentRepository } from "@/infrastructure/content/json/json-content-repository";
 
@@ -10,7 +11,7 @@ import { JsonContentRepository } from "@/infrastructure/content/json/json-conten
  * Чтобы сменить источник правды, добавьте сюда новую ветку и задайте CONTENT_SOURCE.
  */
 const sources: Record<string, () => ContentRepository> = {
-  json: () => new JsonContentRepository(path.join(process.cwd(), "content", "topics")),
+  json: () => new JsonContentRepository(path.join(process.cwd(), "content")),
 };
 
 function createContentRepository(): ContentRepository {
@@ -26,6 +27,7 @@ function createContentRepository(): ContentRepository {
 
 const content = createContentRepository();
 
+export const listCategories = makeListCategories(content);
 export const listTopics = makeListTopics(content);
 export const getTopic = makeGetTopic(content);
 export const getLesson = makeGetLesson(content);

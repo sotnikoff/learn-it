@@ -1,0 +1,14 @@
+.layout {
+  display: grid;
+  grid-template-columns: 15rem minmax(0, var(--measure));
+  column-gap: 3.5rem;
+  align-items: start;
+  justify-content: center;
+}
+
+@media (max-width: 62rem) {
+  .layout {
+    display: block;
+    max-width: calc(var(--measure) + 2 * var(--gutter));
+  }
+}

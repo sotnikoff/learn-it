@@ -24,5 +24,15 @@ export const lessonFileSchema = z.object({
   takeaway: z.string().min(1),
 });
 
+export const categoriesFileSchema = z.array(
+  z.object({
+    slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+    title: z.string().min(1),
+    description: z.string().min(1),
+    /** Slug-и тем в порядке показа. */
+    topics: z.array(z.string().min(1)).min(1),
+  }),
+);
+
 export type TopicFile = z.infer<typeof topicFileSchema>;
 export type LessonFile = z.infer<typeof lessonFileSchema>;

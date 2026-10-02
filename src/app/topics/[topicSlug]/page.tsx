@@ -24,13 +24,13 @@ export default async function TopicPage({ params }: Props) {
   const topic = await orNotFound(getTopic(topicSlug));
 
   return (
-    <>
+    <div className="container">
       <h1>
         <Equation term={topic.title} analogy={topic.analogy} />
       </h1>
       <p className="lede">{topic.summary}</p>
       <h2 className="section-title">Уроки</h2>
       <LessonList topicSlug={topic.slug} lessons={topic.lessons} />
-    </>
+    </div>
   );
 }

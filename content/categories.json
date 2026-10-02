@@ -1,0 +1,34 @@
+[
+  {
+    "slug": "databases",
+    "title": "Базы данных",
+    "description": "Как с ними разговаривать, как они устроены внутри и как их масштабировать.",
+    "topics": [
+      "sql",
+      "db-indexes",
+      "transactions-and-locks",
+      "sql-functions-and-views",
+      "postgres-internals",
+      "sharding-and-replication",
+      "redis"
+    ]
+  },
+  {
+    "slug": "messaging",
+    "title": "Брокеры сообщений",
+    "description": "Как сервисы передают друг другу события и задания, не дожидаясь ответа.",
+    "topics": ["kafka", "rabbitmq"]
+  },
+  {
+    "slug": "network-and-api",
+    "title": "Сеть и API",
+    "description": "Как программы разговаривают друг с другом и узнают, кто перед ними.",
+    "topics": ["http", "rest", "grpc", "jwt"]
+  },
+  {
+    "slug": "infrastructure",
+    "title": "Инфраструктура и доставка",
+    "description": "Как упаковать приложение, запустить его на серверах и выкатывать без страха.",
+    "topics": ["docker", "kubernetes", "ci-cd"]
+  }
+]

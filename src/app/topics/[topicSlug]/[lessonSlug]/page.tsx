@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { orNotFound } from "@/app/_lib/or-not-found";
 import { getLesson, getTopic, listTopics } from "@/composition/container";
+import { LessonLayout } from "@/ui/lesson-layout";
 import { LessonNav } from "@/ui/lesson-nav";
+import { lessonOutline } from "@/ui/lesson-outline";
 import { LessonView } from "@/ui/lesson-view";
+import { TopicMap } from "@/ui/topic-map";
 
 type Props = {
   params: Promise<{ topicSlug: string; lessonSlug: string }>;
@@ -28,9 +31,11 @@ export default async function LessonPage({ params }: Props) {
   );
 
   return (
-    <>
+    <LessonLayout
+      sidebar={<TopicMap topic={topic} currentSlug={lesson.slug} outline={lessonOutline(lesson)} />}
+    >
       <LessonView topic={topic} lesson={lesson} position={position} total={total} />
       <LessonNav topicSlug={topic.slug} previous={previous} next={next} />
-    </>
+    </LessonLayout>
   );
 }

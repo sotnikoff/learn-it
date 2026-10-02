@@ -5,6 +5,7 @@ export type TopicSummary = {
   title: string;
   analogy: string;
   summary: string;
+  lessonCount: number;
 };
 
 export type Topic = TopicSummary & {

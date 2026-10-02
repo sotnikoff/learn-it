@@ -1,12 +1,13 @@
 import type { AnalogyPair } from "@/domain/lesson";
 import styles from "./analogy-table.module.css";
+import { MAPPING_ID, MAPPING_TITLE } from "./lesson-outline";
 
 export function AnalogyTable({ pairs }: { pairs: AnalogyPair[] }) {
   if (pairs.length === 0) return null;
 
   return (
-    <table className={styles.table}>
-      <caption className={styles.caption}>Словарик аналогии</caption>
+    <table id={MAPPING_ID} className={styles.table}>
+      <caption className={styles.caption}>{MAPPING_TITLE}</caption>
       <thead>
         <tr>
           <th scope="col">В технологии</th>

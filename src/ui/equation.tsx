@@ -3,7 +3,8 @@ import styles from "./equation.module.css";
 type Props = {
   term: string;
   analogy: string;
-  size?: "hero" | "row";
+  /** hero — заголовок страницы в две строки, compact — одна строка в списках. */
+  size?: "hero" | "compact";
 };
 
 /** Формула «термин = аналогия». Оборачивается в заголовок или ссылку снаружи. */

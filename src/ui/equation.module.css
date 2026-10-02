@@ -10,8 +10,10 @@
   font-size: clamp(2.25rem, 1.35rem + 4.5vw, 4rem);
 }
 
-.row {
-  font-size: clamp(1.625rem, 1.25rem + 1.9vw, 2.25rem);
+.compact {
+  font-size: clamp(1.25rem, 1.15rem + 0.5vw, 1.5rem);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
 .term {
@@ -30,4 +32,18 @@
 .sign {
   color: var(--brand);
   font-weight: 700;
+}
+
+/* В списках формула идёт одной строкой: «Термин = аналогия». */
+.compact .term,
+.compact .analogy {
+  display: inline;
+}
+
+.compact .analogy {
+  margin: 0 0 0 0.3em;
+}
+
+.compact .sign {
+  margin-right: 0.3em;
 }

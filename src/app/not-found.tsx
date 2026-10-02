@@ -3,7 +3,7 @@ import { Equation } from "@/ui/equation";
 
 export default function NotFound() {
   return (
-    <>
+    <div className="container">
       <h1>
         <Equation term="404" analogy="адресат выбыл" />
       </h1>
@@ -11,6 +11,6 @@ export default function NotFound() {
       <p className="lede">
         <Link href="/">К списку тем</Link>
       </p>
-    </>
+    </div>
   );
 }

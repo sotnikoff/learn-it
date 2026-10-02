@@ -1,6 +1,6 @@
 # Проще говоря
 
-Сайт, который объясняет сложные ИТ-темы бытовыми аналогиями. Первая тема — Apache Kafka через Почту России.
+Сайт, который объясняет сложные ИТ-темы бытовыми аналогиями: Kafka — через Почту России, Redis — через маркерную доску и так далее. Темы сгруппированы по разделам на главной.
 
 ```
 npm install
@@ -20,8 +20,8 @@ app ──▶ composition ──▶ application ──▶ domain
 
 | Слой | Папка | Что внутри |
 |---|---|---|
-| Домен | `src/domain` | Типы `Topic`, `Lesson`, ошибки. Без зависимостей. |
-| Приложение | `src/application` | Порт `ContentRepository` и сценарии (`list-topics`, `get-topic`, `get-lesson`). |
+| Домен | `src/domain` | Типы `Category`, `Topic`, `Lesson`, ошибки. Без зависимостей. |
+| Приложение | `src/application` | Порт `ContentRepository` и сценарии (`list-categories`, `list-topics`, `get-topic`, `get-lesson`). |
 | Инфраструктура | `src/infrastructure` | Адаптеры порта. Сейчас один — `JsonContentRepository`. |
 | Сборка | `src/composition/container.ts` | Единственное место, где выбирается адаптер. |
 | Входной адаптер | `src/app`, `src/ui` | Страницы Next.js, компоненты и их стили. |
@@ -38,8 +38,9 @@ app ──▶ composition ──▶ application ──▶ domain
 1. Создайте папку `content/topics/<slug>/`.
 2. Положите в неё `topic.json`: `title`, `analogy`, `summary` и `lessons` — список slug-ов уроков в порядке прохождения.
 3. Для каждого урока создайте `lessons/<slug>.json`. Образец — любой файл в `content/topics/kafka/lessons/`.
+4. Добавьте slug темы в нужную категорию в `content/categories.json`. Порядок тем в списке — порядок на главной.
 
-Slug — строчные латинские буквы, цифры и дефис. Формат файлов проверяется при сборке (`src/infrastructure/content/json/schemas.ts`): ошибка в контенте остановит сборку с указанием файла.
+Slug — строчные латинские буквы, цифры и дефис. Формат файлов проверяется при сборке (`src/infrastructure/content/json/schemas.ts`): ошибка в контенте остановит сборку с указанием файла. Тема без категории, повтор темы или ссылка на несуществующую тему тоже остановят сборку.
 
 ## Как заменить источник данных
 

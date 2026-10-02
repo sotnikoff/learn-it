@@ -3,6 +3,7 @@ import type { Lesson } from "@/domain/lesson";
 import type { TopicSummary } from "@/domain/topic";
 import { AnalogyTable } from "./analogy-table";
 import { Equation } from "./equation";
+import { CAVEAT_ID, CAVEAT_TITLE, sectionId, TAKEAWAY_ID, TAKEAWAY_TITLE } from "./lesson-outline";
 import styles from "./lesson-view.module.css";
 
 type Props = {
@@ -25,11 +26,11 @@ export function LessonView({ topic, lesson, position, total }: Props) {
         <p className="lede">{lesson.plain}</p>
       </header>
 
-      {lesson.sections.map((section) => (
-        <section key={section.heading} className={styles.section}>
+      {lesson.sections.map((section, i) => (
+        <section key={section.heading} id={sectionId(i)} className={styles.section}>
           <h2>{section.heading}</h2>
-          {section.paragraphs.map((paragraph, i) => (
-            <p key={i}>{paragraph}</p>
+          {section.paragraphs.map((paragraph, j) => (
+            <p key={j}>{paragraph}</p>
           ))}
         </section>
       ))}
@@ -37,14 +38,14 @@ export function LessonView({ topic, lesson, position, total }: Props) {
       <AnalogyTable pairs={lesson.mapping} />
 
       {lesson.caveat && (
-        <aside className={styles.caveat}>
-          <h2>Где аналогия хромает</h2>
+        <aside id={CAVEAT_ID} className={styles.caveat}>
+          <h2>{CAVEAT_TITLE}</h2>
           <p>{lesson.caveat}</p>
         </aside>
       )}
 
-      <footer className={styles.takeaway}>
-        <h2>Запомнить</h2>
+      <footer id={TAKEAWAY_ID} className={styles.takeaway}>
+        <h2>{TAKEAWAY_TITLE}</h2>
         <p>{lesson.takeaway}</p>
       </footer>
     </article>
