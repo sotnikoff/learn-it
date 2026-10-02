@@ -1,0 +1,15 @@
+{
+  "title": "REST",
+  "analogy": "Архив, где у каждой папки свой адрес",
+  "summary": "REST — набор правил, как проектировать API поверх HTTP, чтобы им было легко пользоваться. Разбираем на примере архива с едиными правилами: у каждой папки свой адрес, а действия с любой папкой одни и те же.",
+  "lessons": [
+    "what-is-rest",
+    "resources-and-urls",
+    "methods-semantics",
+    "idempotency",
+    "status-and-errors",
+    "pagination-and-filtering",
+    "versioning",
+    "maturity-and-hateoas"
+  ]
+}

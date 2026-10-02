@@ -1,0 +1,17 @@
+{
+  "title": "HTTP и HTTPS",
+  "analogy": "Окно приёма в МФЦ",
+  "summary": "HTTP — протокол, на котором браузеры и сервисы разговаривают с серверами: принести заявление по форме и получить ответ. HTTPS — то же самое, но в запечатанном конверте. Разбираем, из чего состоит запрос, что значат коды ответов и откуда браузер знает, что сайт настоящий.",
+  "lessons": [
+    "what-is-http",
+    "request-and-response",
+    "methods",
+    "status-codes",
+    "headers",
+    "stateless-and-cookies",
+    "caching",
+    "https-and-tls",
+    "certificates",
+    "http-versions"
+  ]
+}

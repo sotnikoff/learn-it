@@ -1,0 +1,17 @@
+{
+  "title": "Redis",
+  "analogy": "Маркерная доска у рабочего стола",
+  "summary": "Redis — сверхбыстрое хранилище в оперативной памяти: кеш, счётчики, очереди, блокировки. Разбираем на примере маркерной доски: всё под рукой и видно мгновенно, но место ограничено, записи стираются по сроку, а если не фотографировать доску, после уборки всё пропадёт.",
+  "lessons": [
+    "what-is-redis",
+    "data-structures",
+    "ttl",
+    "cache-aside",
+    "invalidation-and-stampede",
+    "eviction",
+    "persistence",
+    "single-thread-and-atomicity",
+    "pub-sub-and-streams",
+    "replication-and-cluster"
+  ]
+}

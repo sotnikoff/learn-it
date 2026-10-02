@@ -1,0 +1,17 @@
+{
+  "title": "Kubernetes",
+  "analogy": "Управление контейнерным портом",
+  "summary": "Kubernetes решает, на каком сервере запустить контейнеры, следит, чтобы они работали, и сам заменяет упавшие. Разбираем на примере большого порта: кто здесь управление, что такое причал, как грузу найти постоянный адрес и как порт сам расширяется в сезон.",
+  "lessons": [
+    "what-is-kubernetes",
+    "cluster",
+    "pod",
+    "deployment",
+    "service",
+    "ingress",
+    "config-and-secrets",
+    "probes",
+    "rolling-update",
+    "autoscaling"
+  ]
+}
