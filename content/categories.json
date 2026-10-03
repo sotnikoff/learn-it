@@ -23,13 +23,13 @@
     "slug": "network-and-api",
     "title": "Сеть и API",
     "description": "Как данные добираются от одного компьютера до другого и как программы договариваются друг с другом.",
-    "topics": ["tcp-udp", "dns", "http", "rest", "grpc"]
+    "topics": ["tcp-udp", "dns", "http", "rest", "grpc", "load-balancing"]
   },
   {
     "slug": "architecture",
     "title": "Архитектура",
-    "description": "Как делить систему на части и сохранять согласованность, когда частей много.",
-    "topics": ["microservices", "sagas"]
+    "description": "Как делить систему на части и как этим частям договариваться между собой.",
+    "topics": ["microservices", "sagas", "event-sourcing-cqrs", "consensus"]
   },
   {
     "slug": "reliability",
@@ -41,12 +41,18 @@
     "slug": "security",
     "title": "Безопасность",
     "description": "Как узнать, кто перед вами, что ему можно и как не оставить лазеек.",
-    "topics": ["authn-authz", "jwt", "oauth-oidc", "owasp"]
+    "topics": ["crypto-basics", "password-storage", "authn-authz", "jwt", "oauth-oidc", "owasp"]
   },
   {
     "slug": "infrastructure",
     "title": "Инфраструктура и доставка",
     "description": "Как упаковать приложение, запустить его на серверах, выкатывать без страха и видеть, что происходит.",
     "topics": ["docker", "kubernetes", "ci-cd", "observability"]
+  },
+  {
+    "slug": "fundamentals",
+    "title": "Основы под капотом",
+    "description": "Как программа одновременно делает много дел и почему это так легко сломать.",
+    "topics": ["concurrency", "async"]
   }
 ]
