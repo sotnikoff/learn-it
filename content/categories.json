@@ -2,14 +2,13 @@
   {
     "slug": "databases",
     "title": "Базы данных",
-    "description": "Как с ними разговаривать, как они устроены внутри и как их масштабировать.",
+    "description": "Как с ними разговаривать, как они устроены внутри и что ещё умеют, кроме хранения строк.",
     "topics": [
       "sql",
       "db-indexes",
       "transactions-and-locks",
       "sql-functions-and-views",
       "postgres-internals",
-      "sharding-and-replication",
       "redis"
     ]
   },
@@ -23,13 +22,19 @@
     "slug": "network-and-api",
     "title": "Сеть и API",
     "description": "Как данные добираются от одного компьютера до другого и как программы договариваются друг с другом.",
-    "topics": ["tcp-udp", "dns", "http", "rest", "grpc", "load-balancing"]
+    "topics": ["tcp-udp", "dns", "http", "rest", "grpc", "realtime", "webhooks", "load-balancing"]
   },
   {
     "slug": "architecture",
     "title": "Архитектура",
-    "description": "Как делить систему на части и как этим частям договариваться между собой.",
-    "topics": ["microservices", "sagas", "event-sourcing-cqrs", "consensus"]
+    "description": "Как делить систему на части и сохранять согласованность между ними.",
+    "topics": ["microservices", "sagas", "event-sourcing-cqrs"]
+  },
+  {
+    "slug": "distributed-systems",
+    "title": "Распределённые системы",
+    "description": "Что происходит, когда данные и решения живут сразу на многих машинах.",
+    "topics": ["consistency-models", "time-and-clocks", "sharding-and-replication", "consensus"]
   },
   {
     "slug": "reliability",
@@ -54,5 +59,23 @@
     "title": "Основы под капотом",
     "description": "Как программа одновременно делает много дел и почему это так легко сломать.",
     "topics": ["concurrency", "async"]
+  },
+  {
+    "slug": "backend-practice",
+    "title": "Практика бэкенда",
+    "description": "Повседневные задачи, на которых ошибаются почти все: деньги, даты, часовые пояса.",
+    "topics": ["money", "dates-and-timezones"]
+  },
+  {
+    "slug": "quality",
+    "title": "Качество и разработка",
+    "description": "Как менять код уверенно и не бояться выкатки.",
+    "topics": ["testing"]
+  },
+  {
+    "slug": "system-design",
+    "title": "Проектирование систем",
+    "description": "Как собрать из всех тем выше работающую систему под конкретную задачу.",
+    "topics": ["system-design"]
   }
 ]
