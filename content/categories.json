@@ -22,13 +22,31 @@
   {
     "slug": "network-and-api",
     "title": "Сеть и API",
-    "description": "Как программы разговаривают друг с другом и узнают, кто перед ними.",
-    "topics": ["http", "rest", "grpc", "jwt"]
+    "description": "Как данные добираются от одного компьютера до другого и как программы договариваются друг с другом.",
+    "topics": ["tcp-udp", "dns", "http", "rest", "grpc"]
+  },
+  {
+    "slug": "architecture",
+    "title": "Архитектура",
+    "description": "Как делить систему на части и сохранять согласованность, когда частей много.",
+    "topics": ["microservices", "sagas"]
+  },
+  {
+    "slug": "reliability",
+    "title": "Надёжность",
+    "description": "Как пережить сбои соседей, наплыв запросов и повторы, ничего не задвоив.",
+    "topics": ["timeouts-and-retries", "circuit-breaker", "rate-limiting", "idempotency"]
+  },
+  {
+    "slug": "security",
+    "title": "Безопасность",
+    "description": "Как узнать, кто перед вами, что ему можно и как не оставить лазеек.",
+    "topics": ["authn-authz", "jwt", "oauth-oidc", "owasp"]
   },
   {
     "slug": "infrastructure",
     "title": "Инфраструктура и доставка",
-    "description": "Как упаковать приложение, запустить его на серверах и выкатывать без страха.",
-    "topics": ["docker", "kubernetes", "ci-cd"]
+    "description": "Как упаковать приложение, запустить его на серверах, выкатывать без страха и видеть, что происходит.",
+    "topics": ["docker", "kubernetes", "ci-cd", "observability"]
   }
 ]
