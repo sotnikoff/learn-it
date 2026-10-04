@@ -1,0 +1,36 @@
+{
+  "title": "Таймауты",
+  "term": "Таймауты HTTP-клиента и сервера, дедлайны вызовов",
+  "analogy": "в Go по умолчанию ждут вечно",
+  "plain": "Многие стандартные инструменты Go по умолчанию не ограничены по времени. http.Get и http.DefaultClient будут ждать ответа вечно, а http.Server без настроек позволит медленному клиенту держать соединение бесконечно. В продакшене каждый внешний вызов должен иметь таймаут, а сервер — настроенные лимиты.",
+  "sections": [
+    {
+      "heading": "HTTP-клиент",
+      "paragraphs": [
+        "У http.DefaultClient нулевой Timeout, то есть его нет. Один зависший внешний сервис — и горутины обработчиков копятся до исчерпания памяти. Задайте Timeout у клиента (общий лимит на весь запрос, включая чтение тела) и передавайте контекст с дедлайном через NewRequestWithContext."
+      ],
+      "code": "var client = &http.Client{\n    Timeout: 10 * time.Second,\n    Transport: &http.Transport{\n        MaxIdleConnsPerHost: 50,             // по умолчанию 2 — мало для API\n        IdleConnTimeout:     90 * time.Second,\n    },\n}\n\nreq, _ := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)\nresp, err := client.Do(req)\nif err != nil {\n    return err\n}\ndefer resp.Body.Close()                     // иначе соединение не вернётся в пул"
+    },
+    {
+      "heading": "Ловушка: незакрытое тело ответа",
+      "paragraphs": [
+        "Если не закрыть resp.Body и не дочитать его, соединение не вернётся в пул: каждый запрос будет открывать новое, а старые — висеть. Типичная утечка файловых дескрипторов. Тело закрывают всегда, даже если оно не нужно, и даже при статусе ошибки."
+      ]
+    },
+    {
+      "heading": "HTTP-сервер",
+      "paragraphs": [
+        "http.ListenAndServe(addr, h) создаёт сервер без таймаутов. Медленный клиент может открыть тысячи соединений и отправлять заголовки по байту в минуту (атака Slowloris). Настройте ReadHeaderTimeout обязательно, ReadTimeout и WriteTimeout — по смыслу API, IdleTimeout — для keep-alive. Для ограничения времени обработчика — контекст с таймаутом или http.TimeoutHandler."
+      ],
+      "code": "srv := &http.Server{\n    Addr:              \":8080\",\n    Handler:           mux,\n    ReadHeaderTimeout: 5 * time.Second,\n    ReadTimeout:       30 * time.Second,\n    WriteTimeout:      30 * time.Second,\n    IdleTimeout:       120 * time.Second,\n}"
+    },
+    {
+      "heading": "Бюджет времени",
+      "paragraphs": [
+        "Если запрос пользователя должен уложиться в 2 секунды, а внутри три последовательных вызова, каждому не стоит давать по 2 секунды. Дедлайн контекста запроса — общий бюджет: вложенные WithTimeout возьмут меньшее из своего значения и оставшегося у родителя. Повторы при ошибках тоже должны укладываться в этот бюджет."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "По умолчанию в Go таймаутов нет. Задавайте Timeout у http.Client, ReadHeaderTimeout и другие лимиты у http.Server, всегда закрывайте resp.Body и передавайте дедлайн через контекст."
+}

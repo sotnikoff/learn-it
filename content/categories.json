@@ -89,5 +89,11 @@
     "title": "Ruby on Rails",
     "description": "Фреймворк, на котором держится большая часть Ruby-мира: от первого контроллера до архитектуры больших приложений.",
     "topics": ["rails-basics", "rails-routing-controllers", "rails-active-record", "rails-active-record-production", "rails-views-frontend", "rails-background", "rails-caching", "rails-security", "rails-testing", "rails-architecture", "rails-internals"]
+  },
+  {
+    "slug": "go",
+    "title": "Язык Go",
+    "description": "Простой язык со сложной начинкой: слайсы, интерфейсы, память, сборщик мусора, горутины и каналы — от синтаксиса до устройства рантайма.",
+    "topics": ["go-basics", "go-slices-maps-strings", "go-types-interfaces", "go-memory", "go-gc", "go-runtime-scheduler", "go-channels", "go-sync", "go-context", "go-tooling-performance"]
   }
 ]

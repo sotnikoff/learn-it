@@ -1,0 +1,36 @@
+{
+  "title": "go vet и линтеры",
+  "term": "Статический анализ: vet, staticcheck, golangci-lint и govulncheck",
+  "analogy": "проверка кода до запуска",
+  "plain": "Компилятор Go ловит многое, но не всё: копирование мьютекса, забытый cancel, неправильный формат в Printf компилируются без ошибок. go vet встроен в инструменты и запускается частично даже при go test. staticcheck и golangci-lint добавляют сотни проверок, а govulncheck ищет известные уязвимости в используемом коде.",
+  "sections": [
+    {
+      "heading": "go vet",
+      "paragraphs": [
+        "Анализаторы vet ищут то, что почти наверняка ошибка: printf (формат не совпадает с аргументами), copylocks (копирование мьютекса), lostcancel (не вызван cancel контекста), unusedresult (выброшен результат fmt.Sprintf), structtag (ошибка в тегах JSON), waitgroup (Add внутри горутины), httpresponse (использование resp до проверки ошибки). go test запускает часть проверок автоматически."
+      ],
+      "code": "go vet ./...\n\n// ./main.go:14:2: fmt.Printf format %d has arg name of wrong type string\n// ./cache.go:22:9: Get passes lock by value: Cache contains sync.Mutex\n// ./client.go:31:7: the cancel function is not used on all paths (possible context leak)"
+    },
+    {
+      "heading": "staticcheck и golangci-lint",
+      "paragraphs": [
+        "staticcheck — самый распространённый набор дополнительных проверок: ошибки, упрощения, устаревшие API, проблемы производительности. golangci-lint объединяет десятки линтеров (staticcheck, errcheck для непроверенных ошибок, gosec для безопасности, revive для стиля) с общей конфигурацией и кешем. В CI обычно запускают его."
+      ]
+    },
+    {
+      "heading": "govulncheck",
+      "paragraphs": [
+        "govulncheck сверяет зависимости с базой уязвимостей Go и, что важно, проверяет, вызывается ли уязвимая функция в вашем коде. Поэтому он даёт меньше ложных тревог, чем сканеры, которые смотрят только на версии."
+      ],
+      "code": "go install golang.org/x/vuln/cmd/govulncheck@latest\ngovulncheck ./..."
+    },
+    {
+      "heading": "Форматирование и модернизация",
+      "paragraphs": [
+        "gofmt (или goimports, который ещё и правит импорты) — обязательная часть процесса: спорить о форматировании в Go не принято. go fix в новых версиях умеет автоматически переписывать код под современные идиомы — например, заменять устаревшие конструкции на новые функции стандартной библиотеки. Всё это стоит запускать в pre-commit и CI."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "go vet ловит частые ошибки вроде копирования мьютекса и забытого cancel, golangci-lint добавляет сотни проверок, govulncheck — уязвимости в реально вызываемом коде."
+}

@@ -1,0 +1,37 @@
+{
+  "title": "Тесты",
+  "term": "Табличные тесты, подтесты, synctest и фаззинг",
+  "analogy": "тесты — обычный Go-код в файлах _test.go",
+  "plain": "Тесты в Go — функции TestXxx(t *testing.T) в файлах _test.go, запуск — go test ./.... Типичная форма — табличный тест: срез случаев и цикл с t.Run для каждого. Встроены параллельный запуск, фаззинг для поиска неожиданных входных данных и пакет testing/synctest для детерминированной проверки кода с горутинами и временем.",
+  "sections": [
+    {
+      "heading": "Табличный тест",
+      "paragraphs": [
+        "Случаи описывают срезом анонимных структур, а цикл запускает каждый как подтест через t.Run. Добавить новый случай — одна строка, а в выводе видно имя упавшего случая. t.Errorf отмечает ошибку и продолжает тест, t.Fatalf — останавливает подтест."
+      ],
+      "code": "func TestParsePrice(t *testing.T) {\n    tests := []struct {\n        name    string\n        in      string\n        want    int64\n        wantErr bool\n    }{\n        {\"целое\", \"100\", 10000, false},\n        {\"копейки\", \"99.95\", 9995, false},\n        {\"мусор\", \"abc\", 0, true},\n    }\n    for _, tt := range tests {\n        t.Run(tt.name, func(t *testing.T) {\n            t.Parallel()                     // подтесты параллельно\n            got, err := ParsePrice(tt.in)\n            if (err != nil) != tt.wantErr {\n                t.Fatalf(\"err = %v, wantErr %v\", err, tt.wantErr)\n            }\n            if got != tt.want {\n                t.Errorf(\"got %d, want %d\", got, tt.want)\n            }\n        })\n    }\n}"
+    },
+    {
+      "heading": "Полезные возможности",
+      "paragraphs": [
+        "t.Helper() помечает вспомогательную функцию, чтобы ошибка показывала строку теста, а не хелпера. t.Cleanup регистрирует очистку. t.Context() (Go 1.24) — контекст, отменяемый в конце теста. t.TempDir() — временный каталог, удалится сам. go test -run 'TestParsePrice/копейки' запускает один подтест, -count=1 отключает кеш результатов, -race включает детектор гонок, -shuffle=on перемешивает порядок."
+      ]
+    },
+    {
+      "heading": "synctest",
+      "paragraphs": [
+        "Код с горутинами и таймерами трудно тестировать: нужно ждать реальное время, тесты медленные и нестабильные. Пакет testing/synctest (стабилен с Go 1.25) запускает тест в «пузыре» с виртуальными часами: время идёт вперёд мгновенно, как только все горутины пузыря заблокированы. synctest.Wait дожидается, пока все горутины уснут, — и можно проверять состояние без sleep."
+      ],
+      "code": "func TestCacheExpires(t *testing.T) {\n    synctest.Test(t, func(t *testing.T) {\n        c := NewCache(time.Minute)\n        c.Set(\"k\", \"v\")\n        time.Sleep(61 * time.Second)   // мгновенно: часы виртуальные\n        synctest.Wait()\n        if _, ok := c.Get(\"k\"); ok {\n            t.Fatal(\"значение не истекло\")\n        }\n    })\n}"
+    },
+    {
+      "heading": "Фаззинг",
+      "paragraphs": [
+        "Фазз-тест получает случайные данные, порождённые из начального набора, и ищет входы, на которых код паникует или нарушает свойство. Найденные падения сохраняются в testdata/fuzz и становятся обычными тестами. Отлично находит ошибки в парсерах, декодерах и валидаторах."
+      ],
+      "code": "func FuzzParsePrice(f *testing.F) {\n    f.Add(\"99.95\")\n    f.Fuzz(func(t *testing.T, s string) {\n        p, err := ParsePrice(s)\n        if err == nil && p < 0 {\n            t.Errorf(\"отрицательная цена для %q\", s)\n        }\n    })\n}\n// go test -fuzz=FuzzParsePrice -fuzztime=30s"
+    }
+  ],
+  "mapping": [],
+  "takeaway": "Табличные тесты с t.Run — стандарт. synctest делает тесты горутин и таймеров быстрыми и детерминированными, а фаззинг находит входы, о которых вы не подумали."
+}

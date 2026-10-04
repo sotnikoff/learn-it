@@ -1,0 +1,37 @@
+{
+  "title": "Отмена работы",
+  "term": "ctx.Done в циклах, причины отмены, AfterFunc и WithoutCancel",
+  "analogy": "отмена — это просьба, а не принуждение",
+  "plain": "Отмена контекста не останавливает горутины сама — она лишь закрывает канал Done. Код должен проверять его в долгих циклах и в каждом ожидании. В новых версиях появились инструменты для частых случаев: причина отмены (WithCancelCause), действие при отмене (AfterFunc) и контекст, который наследует значения, но не отмену (WithoutCancel).",
+  "sections": [
+    {
+      "heading": "Проверка в цикле",
+      "paragraphs": [
+        "Долгий цикл обработки должен время от времени проверять ctx.Err(), а каждая отправка или ожидание — участвовать в select вместе с ctx.Done(). Иначе отменённый запрос будет занимать ресурсы до конца."
+      ],
+      "code": "func processAll(ctx context.Context, items []Item, out chan<- Result) error {\n    for _, it := range items {\n        if err := ctx.Err(); err != nil {\n            return err                     // отменили — выходим\n        }\n        r := process(it)\n        select {\n        case out <- r:\n        case <-ctx.Done():\n            return ctx.Err()\n        }\n    }\n    return nil\n}"
+    },
+    {
+      "heading": "Причина отмены",
+      "paragraphs": [
+        "ctx.Err() говорит только «отменено» или «вышло время». WithCancelCause (Go 1.20) позволяет передать в cancel конкретную ошибку, а context.Cause(ctx) — достать её. WithTimeoutCause (Go 1.21) задаёт причину для таймаута. Это помогает в логах отличить «клиент ушёл» от «упала соседняя задача» и от «истёк общий дедлайн»."
+      ],
+      "code": "ctx, cancel := context.WithCancelCause(parent)\ndefer cancel(nil)\n\nif err := fetchPrices(ctx); err != nil {\n    cancel(fmt.Errorf(\"цены недоступны: %w\", err))\n}\n// где-то ниже\nlog.Println(context.Cause(ctx))"
+    },
+    {
+      "heading": "AfterFunc и WithoutCancel",
+      "paragraphs": [
+        "context.AfterFunc(ctx, f) запускает f в отдельной горутине, когда ctx отменён, — удобно, чтобы прервать операцию, которая сама контекст не понимает (закрыть соединение, разбудить Cond). context.WithoutCancel(ctx) возвращает контекст с теми же значениями, но без отмены — для работы, которая должна завершиться, даже если запрос закончился: записать аудит, отправить метрику."
+      ],
+      "code": "stop := context.AfterFunc(ctx, func() { conn.Close() })  // прервать блокирующее чтение\ndefer stop()\n\ngo audit.Write(context.WithoutCancel(r.Context()), event)  // не отменится с запросом"
+    },
+    {
+      "heading": "Ловушка: контекст в структуре",
+      "paragraphs": [
+        "Хранить context в поле структуры — плохая идея: его время жизни отвязывается от вызова, и непонятно, какую операцию он отменяет. Контекст передают в каждый метод. Исключение — объекты, которые сами представляют одну операцию (например, итератор по результатам запроса)."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "Отмена — это сигнал: проверяйте ctx.Err() в циклах и ctx.Done() рядом с каждым ожиданием. WithCancelCause объясняет причину, AfterFunc прерывает неконтекстные операции, WithoutCancel — для работы после запроса."
+}

@@ -1,0 +1,14 @@
+{
+  "title": "Go: основы",
+  "analogy": "простой язык с честными правилами",
+  "summary": "Что такое Go и почему он так выглядит: нулевые значения, один цикл на все случаи, ошибки как обычные значения, defer и модули. И сразу — места, где простота обманчива: затенение переменных, копии в range, defer в цикле.",
+  "lessons": [
+    "what-is-go",
+    "variables-and-zero-values",
+    "control-flow",
+    "functions-and-closures",
+    "errors",
+    "defer-panic-recover",
+    "packages-and-modules"
+  ]
+}

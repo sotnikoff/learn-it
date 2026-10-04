@@ -1,0 +1,36 @@
+{
+  "title": "Ловушка nil в интерфейсе",
+  "term": "Типизированный nil и интерфейс error",
+  "analogy": "пустая коробка с этикеткой — это уже не «ничего»",
+  "plain": "Интерфейс равен nil, только если пусты оба поля: и тип, и значение. Если положить в интерфейс nil-указатель конкретного типа, тип будет заполнен, и интерфейс окажется не nil. Самая частая жертва — ошибки: функция возвращает error, внутри которого nil-указатель *MyError, и проверка err != nil срабатывает, хотя «ошибки нет».",
+  "sections": [
+    {
+      "heading": "Как это выглядит",
+      "paragraphs": [
+        "Функция объявляет результат как error, а внутри возвращает переменную типа *ValidationError, которая равна nil. Значение error получает тип *ValidationError и данные nil. Для вызывающего это не nil."
+      ],
+      "code": "type ValidationError struct{ Field string }\nfunc (e *ValidationError) Error() string { return e.Field }\n\nfunc validate(name string) error {\n    var verr *ValidationError        // nil-указатель\n    if name == \"\" {\n        verr = &ValidationError{Field: \"name\"}\n    }\n    return verr                      // ловушка!\n}\n\nerr := validate(\"Аня\")\nfmt.Println(err == nil)              // false\nfmt.Printf(\"%T %v\\n\", err, err)      // *main.ValidationError <nil>"
+    },
+    {
+      "heading": "Почему так",
+      "paragraphs": [
+        "Интерфейс — пара (тип, значение). nil-интерфейс — (nil, nil). А return verr превращает *ValidationError в error: получается (*ValidationError, nil). Сравнение с nil проверяет всю пару, и тип не пустой. Так Go может вызвать метод у nil-указателя — некоторые типы осознанно работают с nil-получателем."
+      ]
+    },
+    {
+      "heading": "Как избежать",
+      "paragraphs": [
+        "Возвращайте явный nil, а не переменную конкретного типа. Объявляйте результат функции как error, а не как *MyError. В переменных-накопителях ошибок используйте тип error. Линтер nilness и анализаторы staticcheck находят часть таких мест."
+      ],
+      "code": "func validate(name string) error {\n    if name == \"\" {\n        return &ValidationError{Field: \"name\"}\n    }\n    return nil                       // настоящий nil-интерфейс\n}"
+    },
+    {
+      "heading": "Та же ловушка в других местах",
+      "paragraphs": [
+        "Любой интерфейс ведёт себя так же: io.Reader, в который положили nil *os.File, тоже не nil, и вызов Read упадёт глубже, в неожиданном месте. Проверка «интерфейс содержит nil-указатель» требует рефлексии (reflect.ValueOf(x).IsNil()) — признак, что код стоит переписать так, чтобы nil-указатели в интерфейсы не попадали."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "Интерфейс равен nil, только если пусты и тип, и значение. Возвращайте литерал nil, а не nil-указатель конкретного типа, особенно для error."
+}
