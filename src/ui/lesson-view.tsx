@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Lesson } from "@/domain/lesson";
 import type { TopicSummary } from "@/domain/topic";
 import { AnalogyTable } from "./analogy-table";
+import { ComparisonTable } from "./comparison-table";
 import { Equation } from "./equation";
 import { CAVEAT_ID, CAVEAT_TITLE, sectionId, TAKEAWAY_ID, TAKEAWAY_TITLE } from "./lesson-outline";
 import styles from "./lesson-view.module.css";
@@ -32,8 +33,15 @@ export function LessonView({ topic, lesson, position, total }: Props) {
           {section.paragraphs.map((paragraph, j) => (
             <p key={j}>{paragraph}</p>
           ))}
+          {section.code && (
+            <pre className={styles.code}>
+              <code>{section.code}</code>
+            </pre>
+          )}
         </section>
       ))}
+
+      {lesson.comparison && <ComparisonTable comparison={lesson.comparison} />}
 
       <AnalogyTable pairs={lesson.mapping} />
 

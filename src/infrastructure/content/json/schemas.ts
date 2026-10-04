@@ -17,8 +17,20 @@ export const lessonFileSchema = z.object({
     z.object({
       heading: z.string().min(1),
       paragraphs: z.array(z.string().min(1)).min(1),
+      code: z.string().min(1).optional(),
     }),
   ),
+  comparison: z
+    .object({
+      columns: z.array(z.string().min(1)).min(1),
+      rows: z
+        .array(z.object({ label: z.string().min(1), cells: z.array(z.string().min(1)) }))
+        .min(1),
+    })
+    .refine((c) => c.rows.every((row) => row.cells.length === c.columns.length), {
+      message: "в каждой строке сравнения столько ячеек, сколько колонок",
+    })
+    .optional(),
   mapping: z.array(z.object({ tech: z.string().min(1), real: z.string().min(1) })),
   caveat: z.string().min(1).optional(),
   takeaway: z.string().min(1),

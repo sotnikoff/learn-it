@@ -1,0 +1,80 @@
+{
+  "title": "Сообщения и видимость",
+  "term": "send, public_send, private, protected и method_missing",
+  "analogy": "вызов метода — это записка объекту с именем просьбы",
+  "plain": "В Ruby вызов user.save понимают как отправку объекту сообщения :save. Отсюда динамический вызов send(:save), особая трактовка private (нельзя указать получателя) и method_missing — возможность ответить на сообщение, для которого нет метода.",
+  "sections": [
+    {
+      "heading": "send и public_send",
+      "paragraphs": [
+        "Раз вызов — это сообщение с именем, имя можно вычислить: obj.send(:save) или obj.send(\"set_#{field}\", value). send игнорирует видимость и вызовет даже приватный метод. public_send уважает видимость — используйте его, когда имя метода приходит извне, иначе пользователь сможет вызвать что угодно. Аналоги — getattr(obj, name)() в Python и obj[name]() в JS."
+      ],
+      "code": "field = \"email\"\nuser.public_send(\"#{field}=\", \"a@b.ru\")   # вызов email=\n\nuser.send(:secret_token)          # сработает, даже если метод private\nuser.public_send(:secret_token)   # NoMethodError: private method called"
+    },
+    {
+      "heading": "private в Ruby",
+      "paragraphs": [
+        "private означает не «только этот класс», а «без явного получателя». Приватный метод можно вызвать только как helper, а не obj.helper. Из этого следует неожиданное: приватные методы видны в наследниках — ведь там тоже можно вызвать helper без точки. С Ruby 2.7 разрешено также self.helper.",
+        "protected разрешает явного получателя, но только если вызывающий — объект того же класса или наследника. Его используют для сравнений: other.balance внутри метода ==, когда balance не должен быть публичным."
+      ],
+      "code": "class Account\n  def initialize(balance) = @balance = balance\n  def richer_than?(other) = balance > other.balance   # можно: protected\n\n  protected\n  def balance = @balance\n\n  private\n  def audit = \"внутренняя проверка\"\nend\n\nclass Savings < Account\n  def check = audit        # приватный метод родителя доступен\nend\n\nAccount.new(5).balance     # NoMethodError: protected method called"
+    },
+    {
+      "heading": "method_missing",
+      "paragraphs": [
+        "Если метод не найден, Ruby вызывает method_missing(name, *args). Переопределив его, объект может отвечать на любые сообщения: прокси, обёртки над API, конфиги с доступом через точку. В старом ActiveRecord так работали find_by_email и find_by_name.",
+        "У приёма три цены. Он медленный: вызов сначала проходит всю цепочку предков впустую. Он прячет ошибки: опечатка становится «сообщением». И он ломает рефлексию, если не переопределить respond_to_missing? — тогда respond_to? и method(:x) будут врать."
+      ],
+      "code": "class Settings\n  def initialize(hash) = @data = hash\n\n  def method_missing(name, *args)\n    key = name.to_s\n    return @data[key] if @data.key?(key)\n    super                       # стандартный NoMethodError\n  end\n\n  def respond_to_missing?(name, include_private = false)\n    @data.key?(name.to_s) || super\n  end\nend\n\ns = Settings.new(\"host\" => \"localhost\")\ns.host                # => \"localhost\"\ns.respond_to?(:host)  # => true\ns.port                # NoMethodError"
+    },
+    {
+      "heading": "BasicObject для чистых прокси",
+      "paragraphs": [
+        "У обычного объекта сотни методов от Object и Kernel, и прокси на method_missing их не перехватит: вызов inspect или display уйдёт в Object. Для «прозрачных» обёрток наследуются от BasicObject — у него почти ничего нет, поэтому всё попадает в method_missing."
+      ]
+    }
+  ],
+  "comparison": {
+    "columns": [
+      "Ruby",
+      "Python",
+      "JavaScript"
+    ],
+    "rows": [
+      {
+        "label": "Вызов по имени",
+        "cells": [
+          "obj.public_send(:m)",
+          "getattr(obj, \"m\")()",
+          "obj[\"m\"]()"
+        ]
+      },
+      {
+        "label": "Приватный метод",
+        "cells": [
+          "Без явного получателя",
+          "Соглашение _m",
+          "#m"
+        ]
+      },
+      {
+        "label": "Перехват неизвестного",
+        "cells": [
+          "method_missing",
+          "__getattr__",
+          "Proxy"
+        ]
+      },
+      {
+        "label": "Проверить, ответит ли",
+        "cells": [
+          "respond_to?",
+          "hasattr",
+          "\"m\" in obj"
+        ]
+      }
+    ]
+  },
+  "mapping": [],
+  "takeaway": "Вызов метода — сообщение. private значит «без получателя», а method_missing позволяет отвечать на любое сообщение, но всегда в паре с respond_to_missing? и super."
+}

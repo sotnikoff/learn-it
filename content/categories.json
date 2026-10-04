@@ -22,7 +22,7 @@
     "slug": "network-and-api",
     "title": "Сеть и API",
     "description": "Как данные добираются от одного компьютера до другого и как программы договариваются друг с другом.",
-    "topics": ["tcp-udp", "dns", "http", "rest", "grpc", "realtime", "webhooks", "load-balancing"]
+    "topics": ["tcp-udp", "dns", "http", "rest", "grpc", "realtime", "webhooks", "load-balancing", "cdn"]
   },
   {
     "slug": "architecture",
@@ -77,5 +77,11 @@
     "title": "Проектирование систем",
     "description": "Как собрать из всех тем выше работающую систему под конкретную задачу.",
     "topics": ["system-design"]
+  },
+  {
+    "slug": "ruby",
+    "title": "Язык Ruby",
+    "description": "Как устроен Ruby изнутри: объекты, интерпретатор, память и потоки — в сравнении с Python и JavaScript.",
+    "topics": ["ruby-basics", "ruby-object-model", "ruby-interpreter", "ruby-memory", "ruby-concurrency", "ruby-metaprogramming", "ruby-ecosystem"]
   }
 ]

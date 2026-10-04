@@ -1,0 +1,73 @@
+{
+  "title": "Рефлексия",
+  "term": "Интроспекция: methods, instance_variables, Method, ObjectSpace",
+  "analogy": "программа может спросить о себе что угодно",
+  "plain": "В Ruby любой объект может рассказать о себе: какие у него методы, переменные, класс, предки. Метод можно достать как объект и узнать, где он определён и какие у него параметры. Это основа и отладки, и метапрограммирования.",
+  "sections": [
+    {
+      "heading": "Что умеет объект",
+      "paragraphs": [
+        "methods — все методы объекта, public_methods(false) — только собственные, respond_to?(:x) — ответит ли на сообщение. instance_variables и instance_variable_get — данные объекта. У класса — instance_methods(false), ancestors, const_get. В Python этим занимаются dir(), getattr и модуль inspect, в JS — Object.keys, Reflect и прототипы."
+      ],
+      "code": "user.class                         # => User\nuser.is_a?(ActiveRecord::Base)     # => true\nuser.respond_to?(:email)           # => true\nUser.instance_methods(false)       # методы, объявленные в самом User\n(user.methods - Object.instance_methods).sort.first(5)\n\nObject.const_get(\"Billing::Invoice\")  # класс по строке"
+    },
+    {
+      "heading": "Метод как объект",
+      "paragraphs": [
+        "method(:name) возвращает объект Method. У него можно спросить owner (в каком классе или модуле определён), source_location (файл и строка), parameters (имена и виды параметров), arity. Это главный инструмент, когда в большом Rails-приложении непонятно, откуда взялся метод."
+      ],
+      "code": "m = user.method(:full_name)\nm.owner            # => UserDecorator — метод пришёл из модуля\nm.source_location  # => [\"app/models/concerns/user_decorator.rb\", 12]\nm.parameters       # => [[:req, :separator], [:key, :upcase]]\nm.super_method     # следующий метод с тем же именем в цепочке\n\n\"текст\".method(:upcase).source_location  # => nil — написан на C"
+    },
+    {
+      "heading": "ObjectSpace и стек вызовов",
+      "paragraphs": [
+        "ObjectSpace позволяет перебрать все живые объекты заданного класса — например, найти всех наследников: ObjectSpace.each_object(Class).select { it < Base }. Это медленно и годится для отладки, а не для бизнес-логики.",
+        "caller и caller_locations возвращают текущий стек вызовов. На этом построены сообщения об устаревании (deprecation) с указанием места вызова и логирование «кто меня вызвал»."
+      ],
+      "code": "def deprecated_method\n  loc = caller_locations(1, 1).first\n  warn \"Устарело, вызвано из #{loc.path}:#{loc.lineno}\"\nend"
+    }
+  ],
+  "comparison": {
+    "columns": [
+      "Ruby",
+      "Python",
+      "JavaScript"
+    ],
+    "rows": [
+      {
+        "label": "Методы объекта",
+        "cells": [
+          "obj.methods",
+          "dir(obj)",
+          "Object.getOwnPropertyNames + прототипы"
+        ]
+      },
+      {
+        "label": "Где определён метод",
+        "cells": [
+          "method(:m).source_location",
+          "inspect.getsourcefile",
+          "Нет стандартного способа"
+        ]
+      },
+      {
+        "label": "Класс по имени",
+        "cells": [
+          "Object.const_get",
+          "importlib + getattr",
+          "Нет, только через реестр"
+        ]
+      },
+      {
+        "label": "Стек вызовов",
+        "cells": [
+          "caller_locations",
+          "inspect.stack()",
+          "new Error().stack"
+        ]
+      }
+    ]
+  },
+  "mapping": [],
+  "takeaway": "Объект в Ruby знает о себе всё, а method(:x).owner и source_location быстро отвечают на вопрос «откуда этот метод»."
+}

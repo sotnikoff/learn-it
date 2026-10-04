@@ -1,0 +1,75 @@
+.scroller {
+  margin-top: 3.5rem;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 32rem;
+  border-spacing: 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.caption {
+  position: sticky;
+  left: 0;
+  padding-bottom: 0.875rem;
+  font-family: var(--font-display);
+  font-size: 1.625rem;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  text-align: left;
+}
+
+.table th,
+.table td {
+  padding: 0.625rem 0.875rem;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  text-align: left;
+  vertical-align: top;
+}
+
+.table tr > :first-child {
+  width: 22%;
+  border-left: 1px solid var(--line);
+}
+
+.table tr > :last-child {
+  border-right: 1px solid var(--line);
+}
+
+.table thead > tr > * {
+  background: var(--tint);
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.table tbody th {
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.table tbody tr:last-child > * {
+  border-bottom: 1px solid var(--line);
+}
+
+.table thead > tr > :first-child {
+  border-top-left-radius: var(--radius);
+}
+
+.table thead > tr > :last-child {
+  border-top-right-radius: var(--radius);
+}
+
+.table tbody tr:last-child > :first-child {
+  border-bottom-left-radius: var(--radius);
+}
+
+.table tbody tr:last-child > :last-child {
+  border-bottom-right-radius: var(--radius);
+}

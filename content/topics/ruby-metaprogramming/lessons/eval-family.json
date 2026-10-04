@@ -1,0 +1,80 @@
+{
+  "title": "eval, instance_eval и class_eval",
+  "term": "Семейство eval и binding",
+  "analogy": "выполнить код от лица другого объекта",
+  "plain": "eval выполняет строку как код. instance_eval выполняет блок так, будто он написан внутри объекта: self становится этим объектом. class_eval — так, будто блок написан в теле класса. binding — снимок локального контекста, с которым можно работать как с объектом.",
+  "sections": [
+    {
+      "heading": "Три неявных контекста",
+      "paragraphs": [
+        "В каждой точке программы Ruby держит три вещи. self — кто получает вызовы без точки. Определяемый класс (definee) — куда попадёт метод, объявленный через def. Лексическая область констант (cref) — где искать константы. Методы семейства eval меняют первые два, и вся их разница — в том, как именно.",
+        "instance_eval делает self объектом, а definee — его синглтон-классом: def внутри создаст синглтон-метод. class_eval (он же module_eval) делает self классом, а definee — самим классом: def создаст обычный метод экземпляра, как в теле class. Константы в блоке при этом по-прежнему ищутся там, где блок написан, — частый источник сюрпризов."
+      ],
+      "code": "class Secret\n  def initialize = @code = 42\nend\n\ns = Secret.new\ns.instance_eval { @code }                  # => 42, self — это s\ns.instance_eval { def hint = \"сорок два\" } # синглтон-метод только у s\n\nSecret.class_eval do\n  def reveal = @code                       # обычный метод для всех\nend\nSecret.new.reveal                          # => 42"
+    },
+    {
+      "heading": "Варианты с аргументами",
+      "paragraphs": [
+        "instance_exec и class_exec делают то же самое, но передают в блок аргументы. Это нужно, когда блок пришёл извне и ему нужны данные: так RSpec выполняет блоки примеров."
+      ]
+    },
+    {
+      "heading": "eval строки",
+      "paragraphs": [
+        "eval(\"1 + 2\") парсит и компилирует строку при каждом вызове — это медленно и не проверяется до выполнения. Если в строку попадают данные пользователя, это прямая уязвимость удалённого выполнения кода. В прикладном коде eval строк практически никогда не нужен.",
+        "В библиотеках class_eval со строкой иногда используют специально: так сгенерированный метод — обычный def без замыкания, и он быстрее метода из define_method. Последние два аргумента — файл и строка — делают стек вызовов читаемым."
+      ],
+      "code": "class Model\n  def self.fast_attr(name)\n    class_eval <<~RUBY, __FILE__, __LINE__ + 1\n      def #{name}\n        @attributes[:#{name}]\n      end\n    RUBY\n  end\nend"
+    },
+    {
+      "heading": "binding",
+      "paragraphs": [
+        "binding возвращает объект Binding — локальные переменные, self и прочий контекст в текущей точке. Его можно передать дальше и выполнить в нём код. Самое полезное применение — binding.irb: программа останавливается, и в консоли доступны все локальные переменные. ERB-шаблоны тоже выполняются в переданном binding."
+      ],
+      "code": "def calculate(price, qty)\n  total = price * qty\n  binding.irb          # консоль с доступом к price, qty, total\n  total\nend\n\nb = binding\nb.local_variable_get(:total)"
+    }
+  ],
+  "comparison": {
+    "columns": [
+      "Ruby",
+      "Python",
+      "JavaScript"
+    ],
+    "rows": [
+      {
+        "label": "Выполнить строку",
+        "cells": [
+          "eval",
+          "eval / exec",
+          "eval"
+        ]
+      },
+      {
+        "label": "Поменять self для блока",
+        "cells": [
+          "instance_eval / instance_exec",
+          "Нет аналога",
+          "fn.call(obj)"
+        ]
+      },
+      {
+        "label": "Добавить методы в класс из блока",
+        "cells": [
+          "class_eval",
+          "setattr в цикле",
+          "Object.assign(Cls.prototype, ...)"
+        ]
+      },
+      {
+        "label": "Остановиться с консолью",
+        "cells": [
+          "binding.irb",
+          "breakpoint()",
+          "debugger"
+        ]
+      }
+    ]
+  },
+  "mapping": [],
+  "takeaway": "instance_eval меняет self на объект, class_eval — на класс, и от этого зависит, куда попадёт def. eval строк в прикладном коде не нужен."
+}

@@ -1,0 +1,15 @@
+{
+  "title": "Объектная модель Ruby",
+  "analogy": "классы, модули и сообщения — и ничего больше",
+  "summary": "Как в Ruby устроены классы, откуда берутся методы класса, в каком порядке ищется метод и почему вызов метода — это отправка сообщения. Это фундамент, на котором держатся Rails, RSpec и всё метапрограммирование.",
+  "lessons": [
+    "classes-are-objects",
+    "instance-variables",
+    "singleton-class",
+    "method-lookup",
+    "modules-and-mixins",
+    "messages",
+    "equality-and-hashing",
+    "refinements"
+  ]
+}

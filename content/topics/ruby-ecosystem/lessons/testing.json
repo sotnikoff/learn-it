@@ -1,0 +1,72 @@
+{
+  "title": "Тестирование",
+  "term": "Minitest, RSpec и подмена методов",
+  "analogy": "открытые классы делают моки тривиальными",
+  "plain": "В Ruby два основных фреймворка тестов: компактный Minitest (по умолчанию в Rails) и выразительный RSpec с DSL describe/it. Подменять зависимости в Ruby легко: можно заменить метод у любого объекта или класса прямо во время теста.",
+  "sections": [
+    {
+      "heading": "Minitest и RSpec",
+      "paragraphs": [
+        "Minitest — классы-наследники Minitest::Test с методами test_*. Это обычный Ruby без магии, близко к unittest в Python. RSpec — DSL: describe, context, it, let, expect(...).to. Читается как спецификация и популярен в продуктовых командах. Оба запускают тесты в случайном порядке, чтобы ловить зависимости между ними."
+      ],
+      "code": "# Minitest\nclass CartTest < Minitest::Test\n  def test_total\n    cart = Cart.new\n    cart.add(price: 100)\n    assert_equal 100, cart.total\n  end\nend\n\n# RSpec\nRSpec.describe Cart do\n  it \"считает сумму\" do\n    cart = Cart.new\n    cart.add(price: 100)\n    expect(cart.total).to eq(100)\n  end\nend"
+    },
+    {
+      "heading": "Как работают моки",
+      "paragraphs": [
+        "allow(gateway).to receive(:charge).and_return(true) определяет метод charge в синглтон-классе объекта gateway и после теста удаляет его. allow_any_instance_of временно меняет сам класс. В JavaScript для похожего jest.mock подменяет целые модули через систему загрузки, а в Python unittest.mock.patch подменяет атрибут по пути к нему. В Ruby всё сводится к синглтон-классам и открытым классам.",
+        "Так же работают гемы для подмены внешнего мира: WebMock перехватывает Net::HTTP и другие HTTP-клиенты, travel_to в Rails подменяет Time.now. Это удобно, но избыточные моки делают тесты хрупкими: тест проверяет, какие методы вызваны, а не результат."
+      ],
+      "code": "it \"списывает деньги\" do\n  gateway = PaymentGateway.new\n  allow(gateway).to receive(:charge).and_return(true)   # синглтон-метод\n\n  Checkout.new(gateway).call(order)\n\n  expect(gateway).to have_received(:charge).with(order.total)\nend"
+    },
+    {
+      "heading": "Данные для тестов",
+      "paragraphs": [
+        "Для Rails-тестов данные в базе создают фикстурами (YAML-файлы, загружаются один раз, быстро) или фабриками (factory_bot: create(:user, admin: true), гибко, но медленнее). Медленные тестовые наборы в Ruby чаще всего тормозят из-за базы, а не из-за самого Ruby: лишние create там, где хватило бы build или объекта в памяти."
+      ]
+    }
+  ],
+  "comparison": {
+    "columns": [
+      "Ruby",
+      "Python",
+      "JavaScript"
+    ],
+    "rows": [
+      {
+        "label": "Стандартный фреймворк",
+        "cells": [
+          "Minitest",
+          "unittest",
+          "node:test"
+        ]
+      },
+      {
+        "label": "Популярный DSL",
+        "cells": [
+          "RSpec",
+          "pytest",
+          "Jest, Vitest"
+        ]
+      },
+      {
+        "label": "Подмена метода",
+        "cells": [
+          "allow(obj).to receive",
+          "mock.patch",
+          "jest.spyOn"
+        ]
+      },
+      {
+        "label": "Подмена HTTP",
+        "cells": [
+          "WebMock, VCR",
+          "responses, vcrpy",
+          "nock, msw"
+        ]
+      }
+    ]
+  },
+  "mapping": [],
+  "takeaway": "Minitest — простой, RSpec — выразительный. Моки в Ruby — это временные синглтон-методы, поэтому подменить можно что угодно; главное — не перестараться."
+}

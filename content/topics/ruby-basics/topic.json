@@ -1,0 +1,14 @@
+{
+  "title": "Ruby: основы",
+  "analogy": "Python и JavaScript, если бы их делали ради удовольствия",
+  "summary": "Как Ruby смотрит на код: всё — выражение, всё — объект, строки изменяемые, а функции передают блоками. Разбираем базовые конструкции глазами того, кто уже пишет на Python или JavaScript, и сразу отмечаем, где привычки подведут.",
+  "lessons": [
+    "what-is-ruby",
+    "expressions",
+    "everything-is-object",
+    "strings-and-symbols",
+    "collections",
+    "blocks-procs-lambdas",
+    "errors"
+  ]
+}

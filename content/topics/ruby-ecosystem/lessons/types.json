@@ -1,0 +1,77 @@
+{
+  "title": "Типы в динамическом языке",
+  "term": "RBS, Steep, TypeProf и Sorbet",
+  "analogy": "типы можно добавить, не меняя сам язык",
+  "plain": "Ruby — язык без аннотаций типов в синтаксисе. Типы добавляют снаружи: RBS — официальный язык описания сигнатур в отдельных файлах, Steep проверяет по ним код, а Sorbet от Stripe использует аннотации прямо в Ruby-коде. Пользуются ими далеко не все, но в больших кодовых базах это заметно помогает.",
+  "sections": [
+    {
+      "heading": "Утиная типизация",
+      "paragraphs": [
+        "Ruby-культура исторически опирается на утиную типизацию: важно не какого класса объект, а отвечает ли он на нужные сообщения. Метод, который вызывает each, примет массив, хеш, файл и ваш класс с Enumerable. Ценой этого становятся ошибки вида NoMethodError: undefined method for nil, которые ловят тестами, а не компилятором."
+      ]
+    },
+    {
+      "heading": "RBS",
+      "paragraphs": [
+        "RBS (с Ruby 3.0) — отдельный язык описания типов. Сигнатуры лежат в файлах .rbs рядом с кодом, как .d.ts в TypeScript. Сам Ruby их не читает и в работе программы они не участвуют. Steep проверяет код на соответствие сигнатурам, TypeProf пытается вывести сигнатуры из кода автоматически. Есть и вариант с аннотациями в комментариях прямо в коде (rbs-inline)."
+      ],
+      "code": "# sig/user.rbs\nclass User\n  attr_reader name: String\n  attr_reader email: String?\n\n  def initialize: (name: String, ?email: String?) -> void\n  def admin?: () -> bool\n  def notify: (String message) { (Delivery) -> void } -> Integer\nend"
+    },
+    {
+      "heading": "Sorbet",
+      "paragraphs": [
+        "Sorbet написан в Stripe и используется в Shopify и других больших компаниях. Аннотации пишут прямо в Ruby с помощью DSL sig, а проверку запускают отдельной быстрой утилитой. Кроме того, sig проверяет типы и во время выполнения — неправильный аргумент вызовет исключение."
+      ],
+      "code": "# typed: strict\nclass Invoice\n  extend T::Sig\n\n  sig { params(amount: Integer, currency: String).returns(String) }\n  def format(amount, currency)\n    \"#{amount / 100.0} #{currency}\"\n  end\nend"
+    },
+    {
+      "heading": "Сравнение с Python и TypeScript",
+      "paragraphs": [
+        "В Python аннотации — часть синтаксиса языка, но интерпретатор их не проверяет, проверкой занимаются mypy и pyright. TypeScript — отдельный язык, который компилируется в JavaScript. Ruby ближе к Python по сути, но аннотаций в синтаксисе нет: Matz сознательно не хочет их добавлять, поэтому типы остаются внешним слоем."
+      ]
+    }
+  ],
+  "comparison": {
+    "columns": [
+      "Ruby",
+      "Python",
+      "JavaScript"
+    ],
+    "rows": [
+      {
+        "label": "Аннотации в синтаксисе",
+        "cells": [
+          "Нет",
+          "Да",
+          "Нет в JS, есть в TypeScript"
+        ]
+      },
+      {
+        "label": "Отдельные файлы сигнатур",
+        "cells": [
+          "RBS (.rbs)",
+          "Стабы (.pyi)",
+          ".d.ts"
+        ]
+      },
+      {
+        "label": "Проверка",
+        "cells": [
+          "Steep, Sorbet",
+          "mypy, pyright",
+          "tsc"
+        ]
+      },
+      {
+        "label": "Проверка во время выполнения",
+        "cells": [
+          "Sorbet (sig)",
+          "Нет, кроме библиотек",
+          "Нет"
+        ]
+      }
+    ]
+  },
+  "mapping": [],
+  "takeaway": "Типы в Ruby — внешний слой: RBS со Steep или Sorbet. Сам интерпретатор их не видит, а утиная типизация остаётся основой культуры."
+}

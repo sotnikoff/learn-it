@@ -1,0 +1,82 @@
+{
+  "title": "Гемы, require и Bundler",
+  "term": "RubyGems, $LOAD_PATH, Gemfile и Gemfile.lock",
+  "analogy": "pip и npm, но с одной версией гема на процесс",
+  "plain": "Гем — пакет Ruby-кода с описанием в .gemspec. RubyGems устанавливает гемы и подсовывает их в require. Bundler по Gemfile подбирает совместимые версии всех зависимостей, записывает их в Gemfile.lock и гарантирует, что программа загрузит именно их.",
+  "sections": [
+    {
+      "heading": "Как работает require",
+      "paragraphs": [
+        "require \"json\" ищет файл json.rb (или нативный json.so) в каталогах из массива $LOAD_PATH и выполняет его один раз — повторный require ничего не делает. require_relative ищет относительно текущего файла. load выполняет файл заново при каждом вызове.",
+        "RubyGems подменяет require: если файл не найден, он ищет установленный гем, содержащий такой файл, добавляет его каталог в $LOAD_PATH (активирует гем) и повторяет попытку. Отсюда вечная проблема без Bundler: активируется самая свежая установленная версия, а не та, что нужна проекту."
+      ],
+      "code": "$LOAD_PATH.first(3)           # где ищутся файлы\nrequire \"json\"                # => true — загружено\nrequire \"json\"                # => false — уже было\n$LOADED_FEATURES.grep(/json/) # что уже загружено\nGem.loaded_specs[\"rack\"]&.version"
+    },
+    {
+      "heading": "Gemfile и Gemfile.lock",
+      "paragraphs": [
+        "В Gemfile — что нужно проекту и с какими ограничениями (\"~> 8.0\" — от 8.0 до 9.0). bundle install подбирает версии всех гемов и их зависимостей так, чтобы ограничения выполнялись, и записывает точный результат в Gemfile.lock. Lock-файл коммитят, и у всех разработчиков и на сервере стоят одни и те же версии.",
+        "bundle exec запускает команду так, что в $LOAD_PATH попадают только гемы из Gemfile.lock. Rails делает то же самое при старте через require \"bundler/setup\", а Bundler.require загружает все гемы из Gemfile разом."
+      ],
+      "code": "# Gemfile\nsource \"https://rubygems.org\"\nruby \"4.0.0\"\n\ngem \"rails\", \"~> 8.0\"\ngem \"pg\"\ngem \"puma\", \">= 6\"\n\ngroup :development, :test do\n  gem \"rspec-rails\"\n  gem \"debug\"\nend"
+    },
+    {
+      "heading": "Одна версия на процесс",
+      "paragraphs": [
+        "В npm у каждого пакета может быть своя вложенная копия зависимости нужной версии. В Ruby, как и в Python, в процессе загружается ровно одна версия каждого гема — константы и классы глобальны. Если гему A нужен faraday 1.x, а гему B — 2.x, Bundler сообщит о конфликте, и решать его придётся обновлением одного из них.",
+        "Стандартная библиотека тоже постепенно переезжает в гемы. Часть библиотек — «встроенные гемы» (default gems): они идут с Ruby, но обновляются отдельно. Другие (bundled gems) нужно явно указывать в Gemfile: с Ruby 3.4 это касается, например, csv и base64. Если после обновления Ruby require перестал находить что-то стандартное, причина обычно в этом."
+      ]
+    }
+  ],
+  "comparison": {
+    "columns": [
+      "Ruby",
+      "Python",
+      "JavaScript"
+    ],
+    "rows": [
+      {
+        "label": "Пакет",
+        "cells": [
+          "Гем (.gemspec)",
+          "Пакет (pyproject.toml)",
+          "Пакет (package.json)"
+        ]
+      },
+      {
+        "label": "Описание зависимостей",
+        "cells": [
+          "Gemfile",
+          "pyproject.toml, requirements.txt",
+          "package.json"
+        ]
+      },
+      {
+        "label": "Lock-файл",
+        "cells": [
+          "Gemfile.lock",
+          "poetry.lock, uv.lock",
+          "package-lock.json"
+        ]
+      },
+      {
+        "label": "Версий одного пакета в процессе",
+        "cells": [
+          "Одна",
+          "Одна",
+          "Несколько (вложенные node_modules)"
+        ]
+      },
+      {
+        "label": "Изоляция проекта",
+        "cells": [
+          "bundle exec",
+          "venv",
+          "Локальные node_modules"
+        ]
+      }
+    ]
+  },
+  "mapping": [],
+  "takeaway": "require ищет файлы в $LOAD_PATH, RubyGems добавляет туда гемы, а Bundler фиксирует версии в Gemfile.lock. В процессе может быть только одна версия гема."
+}

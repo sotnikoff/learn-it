@@ -1,0 +1,86 @@
+{
+  "title": "Исключения",
+  "term": "raise, rescue, ensure и иерархия исключений",
+  "analogy": "тот же try/catch, но с ловушками в иерархии",
+  "plain": "Ошибки в Ruby — объекты-исключения. raise бросает их, rescue ловит, ensure выполняется в любом случае. Важная тонкость: голый rescue ловит только StandardError и его потомков, а выход из программы и Ctrl+C — нет. Ловить Exception целиком нельзя.",
+  "sections": [
+    {
+      "heading": "Синтаксис",
+      "paragraphs": [
+        "Аналог try — begin ... end, внутри — rescue (catch), else (если ошибок не было) и ensure (finally). Внутри метода begin можно опустить: rescue пишут прямо в теле метода. retry перезапускает блок begin — удобно для повторных попыток, но без ограничения счётчиком это бесконечный цикл."
+      ],
+      "code": "def fetch_with_retry(url)\n  attempts = 0\n  begin\n    attempts += 1\n    http_get(url)\n  rescue Timeout::Error, Errno::ECONNRESET => e\n    retry if attempts < 3\n    raise                     # перебросить текущую ошибку\n  else\n    log(\"успех с #{attempts}-й попытки\")\n  ensure\n    close_connection\n  end\nend\n\nnumber = Integer(input) rescue nil   # модификатор: проглотит любую StandardError"
+    },
+    {
+      "heading": "Иерархия и ловушка",
+      "paragraphs": [
+        "На вершине — Exception. Под ним — StandardError, от которого наследуются все «обычные» ошибки: ArgumentError, NoMethodError, KeyError, ZeroDivisionError и ваши собственные. Но рядом со StandardError живут Interrupt (Ctrl+C), SystemExit (вызов exit), NoMemoryError и SignalException.",
+        "rescue без класса ловит только StandardError. rescue Exception поймает и exit, и Ctrl+C — программа перестанет нормально завершаться. Своё исключение наследуют от StandardError, а не от Exception. В Python та же логика: Exception против BaseException."
+      ],
+      "code": "class PaymentError < StandardError; end\n\nclass CardDeclined < PaymentError\n  def initialize(code) = super(\"Карта отклонена: #{code}\")\nend\n\nbegin\n  charge!\nrescue PaymentError => e      # ловит и CardDeclined\n  notify(e.message)\nend"
+    },
+    {
+      "heading": "throw и catch — это не исключения",
+      "paragraphs": [
+        "В Ruby есть пара throw/catch, но она не связана с ошибками. Это способ выпрыгнуть сразу из нескольких вложенных циклов или блоков к метке. Используют редко, но если встретили в коде — это управление потоком, а не обработка ошибок."
+      ]
+    },
+    {
+      "heading": "Цена исключений",
+      "paragraphs": [
+        "Создание исключения собирает стек вызовов (backtrace) — это заметно дороже обычного возврата значения. Поэтому исключения не используют для обычных веток вроде «пользователь не найден» в горячем коде: там возвращают nil или объект-результат. Для «ожидаемых» ошибок в стандартной библиотеке часто есть два метода: find (вернёт nil) и find! или fetch (бросит ошибку)."
+      ]
+    }
+  ],
+  "comparison": {
+    "columns": [
+      "Ruby",
+      "Python",
+      "JavaScript"
+    ],
+    "rows": [
+      {
+        "label": "Блок перехвата",
+        "cells": [
+          "begin / rescue / ensure",
+          "try / except / finally",
+          "try / catch / finally"
+        ]
+      },
+      {
+        "label": "Повторить блок",
+        "cells": [
+          "retry",
+          "Цикл вручную",
+          "Цикл вручную"
+        ]
+      },
+      {
+        "label": "База для своих ошибок",
+        "cells": [
+          "StandardError",
+          "Exception",
+          "Error"
+        ]
+      },
+      {
+        "label": "Не ловить",
+        "cells": [
+          "Exception",
+          "BaseException",
+          "—"
+        ]
+      },
+      {
+        "label": "Блок «если без ошибок»",
+        "cells": [
+          "else",
+          "else",
+          "Нет"
+        ]
+      }
+    ]
+  },
+  "mapping": [],
+  "takeaway": "Ловите конкретные классы ошибок, свои наследуйте от StandardError и никогда не ловите Exception целиком."
+}

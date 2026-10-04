@@ -1,0 +1,70 @@
+{
+  "title": "Хуки и автозагрузка",
+  "term": "inherited, included, method_added, const_missing, autoload и Zeitwerk",
+  "analogy": "Ruby сообщает классу о событиях в его жизни",
+  "plain": "Ruby вызывает специальные методы-хуки, когда с классом что-то происходит: у него появился наследник, его модуль подключили, в нём определили метод, обратились к несуществующей константе. На этих хуках построены реестры плагинов, ActiveSupport::Concern и автозагрузка кода в Rails.",
+  "sections": [
+    {
+      "heading": "Хуки классов и модулей",
+      "paragraphs": [
+        "inherited(subclass) вызывается при создании наследника — так фреймворки собирают реестр, например всех задач или всех команд. included(base), extended, prepended — при подключении модуля. method_added(name) — при определении метода, так можно оборачивать методы автоматически."
+      ],
+      "code": "class Command\n  @registry = {}\n  class << self\n    attr_reader :registry\n  end\n\n  def self.inherited(subclass)\n    super\n    name = subclass.name.delete_suffix(\"Command\").downcase\n    Command.registry[name] = subclass\n  end\nend\n\nclass DeployCommand < Command; end\nclass RollbackCommand < Command; end\n\nCommand.registry   # => {\"deploy\" => DeployCommand, \"rollback\" => RollbackCommand}"
+    },
+    {
+      "heading": "const_missing и autoload",
+      "paragraphs": [
+        "Обращение к несуществующей константе вызывает const_missing. Старый автозагрузчик Rails переопределял его: встретив User, он искал файл user.rb и загружал его. Работало, но с ошибками в краевых случаях, потому что const_missing не знает вложенности модулей.",
+        "Встроенный в Ruby механизм надёжнее: Module#autoload(:User, \"user.rb\") регистрирует константу заранее, и файл загрузится при первом обращении к ней. В Python ближайшее — ленивый импорт через __getattr__ модуля."
+      ]
+    },
+    {
+      "heading": "Zeitwerk",
+      "paragraphs": [
+        "Zeitwerk — автозагрузчик Rails с версии 6. При запуске он обходит папки (app/models, app/services) и для каждого файла регистрирует autoload по соглашению об именах: app/services/billing/invoice_builder.rb — Billing::InvoiceBuilder. require в коде приложения не пишут вообще.",
+        "В разработке Zeitwerk умеет перезагружать изменённый код без перезапуска сервера. В продакшене он загружает всё сразу при старте (eager loading): так ошибки в именах обнаруживаются при деплое, а код целиком попадает в общую память до fork."
+      ]
+    },
+    {
+      "heading": "Осторожно с хуками",
+      "paragraphs": [
+        "Переопределяя хук, вызывайте super: другой модуль в цепочке тоже мог на него рассчитывать. А method_added, который сам определяет методы, легко зациклить: определение обёртки снова вызовет хук."
+      ]
+    }
+  ],
+  "comparison": {
+    "columns": [
+      "Ruby",
+      "Python",
+      "JavaScript"
+    ],
+    "rows": [
+      {
+        "label": "Узнать о наследнике",
+        "cells": [
+          "inherited",
+          "__init_subclass__",
+          "Нет"
+        ]
+      },
+      {
+        "label": "Ленивая загрузка",
+        "cells": [
+          "autoload",
+          "Модульный __getattr__",
+          "Динамический import()"
+        ]
+      },
+      {
+        "label": "Автозагрузка по именам файлов",
+        "cells": [
+          "Zeitwerk",
+          "Нет, явные import",
+          "Нет, явные import"
+        ]
+      }
+    ]
+  },
+  "mapping": [],
+  "takeaway": "Хуки вроде inherited и included позволяют классу реагировать на события. Zeitwerk строит на autoload загрузку кода по именам файлов, без require."
+}

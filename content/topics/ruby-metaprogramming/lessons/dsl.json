@@ -1,0 +1,69 @@
+{
+  "title": "Как устроены DSL",
+  "term": "Внутренние DSL: блоки + instance_eval",
+  "analogy": "Gemfile, routes.rb и RSpec — это просто Ruby",
+  "plain": "DSL (предметно-ориентированный язык) в Ruby — обычный Ruby-код, который читается как конфигурация. Секрет в трёх вещах: необязательные скобки, блоки и instance_eval, который выполняет блок в контексте специального объекта-построителя.",
+  "sections": [
+    {
+      "heading": "Gemfile — это код",
+      "paragraphs": [
+        "gem \"rails\", \"~> 8.0\" — вызов метода gem с двумя аргументами. Bundler читает Gemfile и выполняет его через instance_eval в объекте Bundler::Dsl, у которого есть методы source, gem, group. Так же устроены config/routes.rb, Rakefile, Capfile, спецификации RSpec."
+      ]
+    },
+    {
+      "heading": "Свой DSL за 15 строк",
+      "paragraphs": [
+        "Нужен объект-построитель с методами-«словами» и метод, который выполняет блок пользователя в его контексте. Блок выглядит как конфигурация, но в нём доступен весь Ruby: циклы, условия, переменные окружения."
+      ],
+      "code": "class Pipeline\n  def self.define(&block)\n    builder = new\n    builder.instance_eval(&block)\n    builder.steps\n  end\n\n  attr_reader :steps\n  def initialize = @steps = []\n  def step(name, retries: 0) = @steps << { name:, retries: }\nend\n\nPipeline.define do\n  step :checkout\n  step :test, retries: 2\n  step :deploy if ENV[\"CI_BRANCH\"] == \"main\"\nend\n# => [{name: :checkout, retries: 0}, {name: :test, retries: 2}, ...]"
+    },
+    {
+      "heading": "Как работает RSpec",
+      "paragraphs": [
+        "describe — метод, который создаёт анонимный класс примера (Class.new). it сохраняет блок. let(:user) { ... } определяет в этом классе мемоизированный метод user через define_method. При запуске RSpec создаёт объект класса и выполняет блок it через instance_exec — поэтому внутри видны user, expect и вспомогательные методы."
+      ],
+      "code": "RSpec.describe Cart do          # Class.new(RSpec::Core::ExampleGroup)\n  let(:cart) { Cart.new }       # define_method(:cart) с мемоизацией\n\n  it \"считает сумму\" do         # блок сохранён, выполнится через instance_exec\n    cart.add(price: 100)\n    expect(cart.total).to eq(100)\n  end\nend"
+    },
+    {
+      "heading": "Обратная сторона instance_eval",
+      "paragraphs": [
+        "Внутри блока self подменён, поэтому методы и @переменные внешнего объекта недоступны: @user в блоке — это переменная построителя, а не ваша. Локальные переменные видны — блок остаётся замыканием. Многие библиотеки поэтому предлагают второй стиль: блок с параметром (Rails.application.configure do |config|), где self не меняется."
+      ]
+    }
+  ],
+  "comparison": {
+    "columns": [
+      "Ruby",
+      "Python",
+      "JavaScript"
+    ],
+    "rows": [
+      {
+        "label": "Конфигурация как код",
+        "cells": [
+          "Gemfile, routes.rb",
+          "setup.py, conftest.py",
+          "webpack.config.js"
+        ]
+      },
+      {
+        "label": "Тесты с describe/it",
+        "cells": [
+          "RSpec",
+          "pytest-describe",
+          "Jest, Mocha"
+        ]
+      },
+      {
+        "label": "Механизм",
+        "cells": [
+          "instance_eval блока",
+          "Декораторы, контекстные менеджеры",
+          "Колбэки и замыкания"
+        ]
+      }
+    ]
+  },
+  "mapping": [],
+  "takeaway": "DSL в Ruby — это методы без скобок и блоки, выполненные через instance_eval в объекте-построителе. Цена — подменённый self внутри блока."
+}

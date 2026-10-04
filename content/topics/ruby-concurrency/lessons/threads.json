@@ -1,0 +1,80 @@
+{
+  "title": "Потоки и синхронизация",
+  "term": "Thread, Mutex, Queue и потокобезопасность",
+  "analogy": "гонки данных никуда не делись",
+  "plain": "Thread в CRuby — настоящий системный поток. Ruby-код потоки выполняют по очереди из-за GVL, но переключение может случиться в любой момент. Поэтому общие изменяемые данные защищают Mutex, а для передачи работы между потоками используют Queue.",
+  "sections": [
+    {
+      "heading": "Создание и результат",
+      "paragraphs": [
+        "Thread.new запускает блок в новом потоке. join ждёт завершения, value — ждёт и возвращает результат блока. Если поток упал с исключением, оно будет переброшено при join или value. По умолчанию Ruby также печатает такие ошибки в момент падения (report_on_exception), чтобы они не терялись."
+      ],
+      "code": "t = Thread.new { 2 + 2 }\nt.value     # => 4\n\nbad = Thread.new { raise \"ой\" }   # напечатает предупреждение\nbad.join                         # RuntimeError: ой — переброшено"
+    },
+    {
+      "heading": "Гонки",
+      "paragraphs": [
+        "Операция @count += 1 — это три шага: прочитать, прибавить, записать. Если поток прервут между чтением и записью, второй поток прочитает старое значение, и одно увеличение потеряется. С GVL это случается реже, чем в языках без глобальной блокировки, — и поэтому такие ошибки особенно коварны: они редкие и появляются только под нагрузкой.",
+        "Mutex#synchronize даёт блоку исключительный доступ. Для простых случаев есть готовые потокобезопасные структуры в геме concurrent-ruby: Concurrent::Map, AtomicFixnum, пулы потоков, промисы."
+      ],
+      "code": "class Counter\n  def initialize\n    @count = 0\n    @lock = Mutex.new\n  end\n\n  def increment\n    @lock.synchronize { @count += 1 }\n  end\nend"
+    },
+    {
+      "heading": "Очереди",
+      "paragraphs": [
+        "Лучше не делить данные, а передавать их. Queue — потокобезопасная очередь: один поток кладёт задачи (push), другие забирают (pop) и ждут, если очередь пуста. SizedQueue ещё и блокирует производителя, когда очередь заполнена, — защита от переполнения памяти."
+      ],
+      "code": "jobs = SizedQueue.new(100)\nworkers = 4.times.map do\n  Thread.new do\n    while (url = jobs.pop)        # nil — сигнал завершения\n      download(url)\n    end\n  end\nend\n\nurls.each { jobs << it }\n4.times { jobs << nil }\nworkers.each(&:join)"
+    },
+    {
+      "heading": "Где прячется общее состояние",
+      "paragraphs": [
+        "В многопоточном сервере (Puma) один и тот же объект класса виден всем потокам. Опасны переменные класса и экземпляра у классов (@cache в class << self), константы с изменяемыми хешами, мемоизация ||= в общих объектах, глобальные переменные. Данные одного запроса держат в локальных переменных или в объектах, созданных для этого запроса.",
+        "Thread.current[:key] — несмотря на название, хранилище не потока, а файбера. Для настоящих переменных потока есть thread_variable_get и thread_variable_set. Rails предлагает ActiveSupport::CurrentAttributes, который корректно сбрасывается между запросами."
+      ]
+    }
+  ],
+  "comparison": {
+    "columns": [
+      "Ruby",
+      "Python",
+      "JavaScript"
+    ],
+    "rows": [
+      {
+        "label": "Поток",
+        "cells": [
+          "Thread.new { }",
+          "threading.Thread",
+          "new Worker(...)"
+        ]
+      },
+      {
+        "label": "Блокировка",
+        "cells": [
+          "Mutex#synchronize",
+          "with lock:",
+          "Atomics.wait / Mutex на SharedArrayBuffer"
+        ]
+      },
+      {
+        "label": "Очередь между потоками",
+        "cells": [
+          "Queue, SizedQueue",
+          "queue.Queue",
+          "postMessage"
+        ]
+      },
+      {
+        "label": "Готовые примитивы",
+        "cells": [
+          "concurrent-ruby",
+          "concurrent.futures",
+          "—"
+        ]
+      }
+    ]
+  },
+  "mapping": [],
+  "takeaway": "GVL не спасает от гонок: общие данные — под Mutex, работа — через Queue. Опаснее всего состояние в классах и константах, которое видят все потоки сервера."
+}

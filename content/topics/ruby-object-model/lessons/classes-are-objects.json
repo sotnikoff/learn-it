@@ -1,0 +1,83 @@
+{
+  "title": "Классы — тоже объекты",
+  "term": "Class, Module и открытые классы",
+  "analogy": "класс — обычный объект, который умеет создавать другие",
+  "plain": "Класс в Ruby — это объект класса Class, записанный в константу. Тело класса — обычный исполняемый код, в котором self указывает на сам класс. А открыть и дополнить можно любой класс, включая встроенные String и Integer.",
+  "sections": [
+    {
+      "heading": "class — это присваивание",
+      "paragraphs": [
+        "Запись class User; end делает две вещи: создаёт объект класса Class и кладёт его в константу User. То же можно сделать явно: User = Class.new. Поэтому классы можно создавать на лету, передавать в методы и хранить в хешах — как любые другие значения.",
+        "У каждого класса есть родитель: User.superclass — Object, Object.superclass — BasicObject, а у BasicObject родителя нет. У самих классов тоже есть класс: User.class — Class, а Class наследуется от Module. Получается замкнутая система, где Class — экземпляр самого себя."
+      ],
+      "code": "class User; end\n\nUser.class            # => Class\nUser.superclass       # => Object\nClass.superclass      # => Module\nClass.class           # => Class — замыкание системы\n\nAdmin = Class.new(User) do\n  def admin? = true\nend\nAdmin.new.admin?      # => true\nAdmin.name            # => \"Admin\" — имя дала константа"
+    },
+    {
+      "heading": "Тело класса — обычный код",
+      "paragraphs": [
+        "Внутри class ... end можно писать что угодно: циклы, условия, вызовы методов. Код выполняется один раз, при загрузке файла, и self в нём — сам класс. Поэтому attr_reader :name, has_many :posts и validates :email — не ключевые слова, а обычные вызовы методов класса.",
+        "В Python тело класса тоже исполняется, но результат превращается в класс только в конце, через метакласс type. В JavaScript тело class — декларация, туда нельзя вписать произвольный код (кроме статических блоков)."
+      ],
+      "code": "class Report\n  puts \"Определяю #{self}\"      # печатает при загрузке: Определяю Report\n\n  %w[pdf csv xlsx].each do |format|\n    define_method(\"to_#{format}\") { \"отчёт в #{format}\" }\n  end\n\n  attr_reader :title            # вызов метода Module#attr_reader\nend\n\nReport.new.to_csv   # => \"отчёт в csv\""
+    },
+    {
+      "heading": "Открытые классы",
+      "paragraphs": [
+        "Если написать class String ещё раз, Ruby не создаст новый класс, а откроет существующий и добавит туда методы. Так можно дополнить любой класс в любой момент — это называют monkey patching. Rails (ActiveSupport) этим живёт: 3.days.ago, \"user\".pluralize, nil.blank? — всё это методы, добавленные во встроенные классы.",
+        "В Python встроенные типы закрыты: добавить метод в str нельзя. В JavaScript можно дописать String.prototype, но это считается плохим тоном после истории с MooTools, из-за которой стандартный метод Array.prototype.flatten пришлось переименовать во flat. В Ruby открытые классы — норма, но у них есть цена (о ней — урок про refinements)."
+      ],
+      "code": "class Integer\n  def minutes = self * 60\nend\n\n5.minutes   # => 300\n\nclass String\n  def shout = upcase + \"!\"\nend\n\"привет\".shout   # => \"ПРИВЕТ!\""
+    }
+  ],
+  "comparison": {
+    "columns": [
+      "Ruby",
+      "Python",
+      "JavaScript"
+    ],
+    "rows": [
+      {
+        "label": "Класс — значение",
+        "cells": [
+          "Да, объект Class",
+          "Да, объект type",
+          "Да, функция-конструктор"
+        ]
+      },
+      {
+        "label": "Создать класс на лету",
+        "cells": [
+          "Class.new(Parent) { }",
+          "type(\"Name\", (Parent,), {})",
+          "class extends Parent { }"
+        ]
+      },
+      {
+        "label": "Код в теле класса",
+        "cells": [
+          "Любой",
+          "Любой",
+          "Только объявления и static { }"
+        ]
+      },
+      {
+        "label": "Дополнить встроенный класс",
+        "cells": [
+          "Можно, принято",
+          "Нельзя",
+          "Можно, не принято"
+        ]
+      },
+      {
+        "label": "Корень иерархии",
+        "cells": [
+          "BasicObject",
+          "object",
+          "Object.prototype"
+        ]
+      }
+    ]
+  },
+  "mapping": [],
+  "takeaway": "Класс — это объект в константе, а его тело — исполняемый код. Любой класс можно открыть и дополнить, и Rails этим активно пользуется."
+}

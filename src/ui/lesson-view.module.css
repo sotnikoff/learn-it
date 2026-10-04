@@ -13,6 +13,17 @@
   margin-top: 1em;
 }
 
+.code {
+  margin-top: 1.25rem;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
 .caveat {
   margin-top: 3rem;
   padding: 1.25rem 1.5rem 1.375rem;

@@ -19,6 +19,8 @@
 
   --font-display: var(--font-geologica), system-ui, sans-serif;
   --font-body: var(--font-literata), Georgia, serif;
+  /* Системный моноширинный стек — для кода, отдельный шрифт не грузим. */
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   --measure: 42rem;
   --wide: 64rem;
@@ -89,6 +91,20 @@ h2 {
 p {
   margin: 0;
   text-wrap: pretty;
+}
+
+pre {
+  margin: 0;
+  tab-size: 2;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+pre code {
+  font-size: inherit;
 }
 
 a {

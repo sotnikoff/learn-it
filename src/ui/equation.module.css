@@ -4,6 +4,9 @@
   line-height: 1.08;
   letter-spacing: -0.03em;
   text-wrap: balance;
+  /* Длинные слова («Метапрограммирование») не выталкивают страницу вбок на узком экране. */
+  hyphens: auto;
+  overflow-wrap: break-word;
 }
 
 .hero {

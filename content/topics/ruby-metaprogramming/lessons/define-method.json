@@ -1,0 +1,70 @@
+{
+  "title": "Методы на лету",
+  "term": "define_method, alias_method, remove_method и undef_method",
+  "analogy": "attr_accessor — это обычный Ruby, а не синтаксис",
+  "plain": "define_method создаёт метод из блока во время выполнения. Именно так устроены attr_accessor, ассоциации ActiveRecord и большая часть магии Rails. Отличие от def — блок является замыканием и видит локальные переменные вокруг.",
+  "sections": [
+    {
+      "heading": "define_method",
+      "paragraphs": [
+        "def открывает новую область видимости: внутри не видно локальных переменных снаружи. Блок define_method — замыкание, поэтому может использовать переменные цикла. Это и делает его удобным для генерации однотипных методов."
+      ],
+      "code": "class Order\n  STATUSES = %i[pending paid shipped cancelled]\n\n  STATUSES.each do |status|\n    define_method(\"#{status}?\") { @status == status }   # status из замыкания\n    define_method(\"#{status}!\") { @status = status }\n  end\nend\n\norder = Order.new\norder.paid!\norder.paid?      # => true"
+    },
+    {
+      "heading": "Свой attr_accessor",
+      "paragraphs": [
+        "attr_accessor написан на C, но его легко повторить на Ruby. Метод класса получает имена и для каждого определяет пару методов. Именно так гемы добавляют свои «ключевые слова»: has_many, validates, scope — всё это методы класса с define_method внутри."
+      ],
+      "code": "class Module\n  def my_accessor(*names)\n    names.each do |name|\n      define_method(name) { instance_variable_get(\"@#{name}\") }\n      define_method(\"#{name}=\") { |value| instance_variable_set(\"@#{name}\", value) }\n    end\n  end\nend\n\nclass Point\n  my_accessor :x, :y\nend"
+    },
+    {
+      "heading": "Переименовать и удалить",
+      "paragraphs": [
+        "alias_method :old_save, :save копирует метод под новым именем — раньше так оборачивали методы, теперь чаще используют prepend. remove_method удаляет метод из конкретного класса, и тогда снова будет найден метод родителя. undef_method запрещает метод совсем: даже если он есть у родителя, вызов бросит NoMethodError."
+      ],
+      "code": "class ReadOnlyList < Array\n  undef_method :<<, :push, :delete    # у родителя есть, но здесь — нет\nend\n\nReadOnlyList.new([1]).push(2)   # NoMethodError"
+    },
+    {
+      "heading": "Цена",
+      "paragraphs": [
+        "Метод, созданный define_method, вызывается через блок: исторически это было медленнее обычного def, хотя YJIT сократил разницу. Важнее другое: такой метод не найти поиском по коду. grep \"def paid?\" ничего не вернёт. Поэтому генерируемые методы стоит документировать, а при отладке — спрашивать method(:paid?).source_location."
+      ]
+    }
+  ],
+  "comparison": {
+    "columns": [
+      "Ruby",
+      "Python",
+      "JavaScript"
+    ],
+    "rows": [
+      {
+        "label": "Добавить метод в рантайме",
+        "cells": [
+          "define_method",
+          "setattr(cls, name, fn)",
+          "Class.prototype[name] = fn"
+        ]
+      },
+      {
+        "label": "Тело видит внешние переменные",
+        "cells": [
+          "Да (блок)",
+          "Да (замыкание)",
+          "Да (замыкание)"
+        ]
+      },
+      {
+        "label": "Запретить унаследованный метод",
+        "cells": [
+          "undef_method",
+          "Переопределить и бросить ошибку",
+          "Переопределить"
+        ]
+      }
+    ]
+  },
+  "mapping": [],
+  "takeaway": "define_method создаёт методы из замыканий — так устроены attr_accessor и DSL Rails. Генерируйте методы при загрузке и помните, что grep их не найдёт."
+}

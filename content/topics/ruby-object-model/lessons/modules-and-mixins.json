@@ -1,0 +1,79 @@
+{
+  "title": "Модули и примеси",
+  "term": "Module, include, prepend и extend",
+  "analogy": "модуль — набор методов, который можно встроить в любой класс",
+  "plain": "Модуль похож на класс, но у него нельзя создать экземпляр. Он нужен для двух вещей: как пространство имён и как примесь — набор методов, который подключают в классы. include добавляет модуль над классом в цепочке поиска, prepend — перед классом, extend — в синглтон-класс объекта.",
+  "sections": [
+    {
+      "heading": "Пространство имён",
+      "paragraphs": [
+        "Модули группируют классы и константы: Net::HTTP, ActiveRecord::Base. Это аналог пакета в Python или модуля в JS, но без привязки к файлу: один модуль можно дополнять из разных файлов. Обращение к константе внутри модуля сначала ищется в лексической области (вложенных module), а потом — у предков."
+      ]
+    },
+    {
+      "heading": "Примеси: include",
+      "paragraphs": [
+        "include Mod вставляет модуль в цепочку предков сразу над классом. Методы модуля становятся методами экземпляров, и класс может их переопределить, вызвав оригинал через super. Самые известные примеси — Comparable и Enumerable: класс определяет один базовый метод, а модуль даёт остальные.",
+        "В Python для этого используют множественное наследование от классов-миксинов, в JavaScript — копирование методов через Object.assign. Модули Ruby — более строгая форма: их нельзя создать, и они встраиваются в цепочку в предсказуемом месте."
+      ],
+      "code": "class Version\n  include Comparable\n  attr_reader :parts\n  def initialize(s) = @parts = s.split(\".\").map(&:to_i)\n  def <=>(other) = parts <=> other.parts   # один метод\nend\n\nVersion.new(\"1.10\") > Version.new(\"1.9\")   # => true — > из Comparable\n[Version.new(\"2.0\"), Version.new(\"1.2\")].max.parts  # => [2, 0]\nVersion.new(\"1.5\").between?(Version.new(\"1.0\"), Version.new(\"2.0\"))  # => true"
+    },
+    {
+      "heading": "prepend: обернуть метод",
+      "paragraphs": [
+        "prepend ставит модуль перед классом. Его метод вызывается первым и может вызвать оригинал через super. Так оборачивают методы класса — для логирования, кеширования, замеров — не трогая исходник. Раньше для этого использовали alias_method, prepend надёжнее."
+      ],
+      "code": "module Timing\n  def call(*args)\n    started = Process.clock_gettime(Process::CLOCK_MONOTONIC)\n    super\n  ensure\n    puts \"#{self.class}#call: #{Process.clock_gettime(Process::CLOCK_MONOTONIC) - started} с\"\n  end\nend\n\nclass Importer\n  prepend Timing\n  def call(file) = sleep(0.1)\nend"
+    },
+    {
+      "heading": "extend и хук included",
+      "paragraphs": [
+        "extend Mod подключает модуль к синглтон-классу — методы модуля становятся методами одного объекта или, внутри класса, методами класса. Частый приём: модуль при подключении через include сам себя расширяет методами класса. Для этого у модуля есть хук self.included(base), который Ruby вызывает в момент include. В Rails эту схему оформили в ActiveSupport::Concern."
+      ],
+      "code": "module Trackable\n  def self.included(base)\n    base.extend(ClassMethods)\n  end\n\n  module ClassMethods\n    def tracked_fields(*names) = @tracked = names\n  end\n\n  def changes_summary = \"отслеживаю #{self.class.instance_variable_get(:@tracked)}\"\nend\n\nclass Order\n  include Trackable\n  tracked_fields :status, :total      # метод класса из ClassMethods\nend"
+    }
+  ],
+  "comparison": {
+    "columns": [
+      "Ruby",
+      "Python",
+      "JavaScript"
+    ],
+    "rows": [
+      {
+        "label": "Примесь",
+        "cells": [
+          "include Module",
+          "Наследование от миксина",
+          "Object.assign(proto, mixin)"
+        ]
+      },
+      {
+        "label": "Обернуть метод",
+        "cells": [
+          "prepend + super",
+          "Декоратор",
+          "Обёртка над методом прототипа"
+        ]
+      },
+      {
+        "label": "Пространство имён",
+        "cells": [
+          "module A::B",
+          "Пакет и модуль-файл",
+          "ES-модуль"
+        ]
+      },
+      {
+        "label": "Сравнение из одного метода",
+        "cells": [
+          "Comparable + <=>",
+          "functools.total_ordering",
+          "Нет"
+        ]
+      }
+    ]
+  },
+  "mapping": [],
+  "takeaway": "Модуль — это пространство имён и примесь. include ставит его над классом, prepend — перед ним, extend — в синглтон-класс."
+}
