@@ -1,0 +1,12 @@
+{
+  "title": "Rails: как всё устроено",
+  "analogy": "фреймворк, где за вас уже договорились",
+  "summary": "Что такое Rails, как запрос проходит путь от браузера до ответа, где что лежит в проекте и какие команды нужны каждый день. После этой темы любой Rails-проект перестаёт выглядеть магией.",
+  "lessons": [
+    "what-is-rails",
+    "request-journey",
+    "project-structure",
+    "generators-and-console",
+    "environments-and-credentials"
+  ]
+}

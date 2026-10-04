@@ -1,0 +1,36 @@
+{
+  "title": "Валидации",
+  "term": "Валидации моделей и их пределы",
+  "analogy": "проверка анкеты до того, как её подшили в дело",
+  "plain": "Валидации проверяют данные перед сохранением: обязательные поля, формат, длину, уникальность. Если проверка не прошла, save вернёт false, а errors объяснит причину — это превращается в сообщения в форме. Но валидации работают только в Ruby: их можно обойти, а проверка уникальности не защищает от гонок.",
+  "sections": [
+    {
+      "heading": "Встроенные проверки",
+      "paragraphs": [
+        "presence, length, format, numericality, inclusion, uniqueness, comparison — покрывают большинство случаев. Свою проверку пишут методом с validate. Ошибки накапливаются в errors, а не бросаются по одной, поэтому пользователь видит сразу все проблемы формы."
+      ],
+      "code": "class User < ApplicationRecord\n  normalizes :email, with: ->(e) { e.strip.downcase }   # Rails 7.1+\n  validates :email, presence: true, uniqueness: true,\n                    format: { with: URI::MailTo::EMAIL_REGEXP }\n  validates :age, numericality: { greater_than_or_equal_to: 18 }, allow_nil: true\n  validate :birthday_not_in_future\n\n  private\n\n  def birthday_not_in_future\n    errors.add(:birthday, \"не может быть в будущем\") if birthday&.future?\n  end\nend\n\nuser = User.new(email: \"\")\nuser.valid?                  # => false\nuser.errors.full_messages    # => [\"Email can't be blank\", ...]"
+    },
+    {
+      "heading": "Контексты",
+      "paragraphs": [
+        "Иногда правила зависят от ситуации: при регистрации пароль обязателен, при смене имени — нет. Для этого есть on: :create, on: :update и свои контексты: valid?(:publish) проверит правила с on: :publish. Ещё есть if и unless. Если условий становится много, это знак, что разные сценарии лучше вынести в разные объекты-формы."
+      ]
+    },
+    {
+      "heading": "Уникальность и гонки",
+      "paragraphs": [
+        "validates :email, uniqueness: true делает SELECT и проверяет, нет ли такого email. Два одновременных запроса регистрации оба увидят «нет» и оба сохранятся. Защита — уникальный индекс в базе. Тогда второй INSERT упадёт с ActiveRecord::RecordNotUnique, и его нужно обработать."
+      ],
+      "code": "# миграция\nadd_index :users, :email, unique: true\n\n# обработка гонки\nbegin\n  User.create!(email:)\nrescue ActiveRecord::RecordNotUnique\n  User.find_by!(email:)\nend"
+    },
+    {
+      "heading": "Как обходят валидации",
+      "paragraphs": [
+        "update_column, update_columns, update_all, insert_all, upsert_all, delete и save(validate: false) пишут в базу без валидаций. Это осознанные инструменты для массовых операций и служебных правок, но каждый такой вызов — место, где в базу может попасть то, что модель считает недопустимым."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "Валидации дают понятные ошибки в формах, но гарантию даёт только база: уникальность — уникальным индексом, обязательность — null: false."
+}

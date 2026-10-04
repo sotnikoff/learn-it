@@ -1,0 +1,36 @@
+{
+  "title": "Загрузка приложения",
+  "term": "boot.rb, application.rb, инициализаторы и eager loading",
+  "analogy": "порядок включения оборудования перед открытием",
+  "plain": "От команды bin/rails server до первого запроса Rails проходит фиксированную цепочку: настраивает Bundler и Bootsnap, загружает фреймворки и гемы, описывает приложение, выполняет инициализаторы всех компонентов и ваши config/initializers, а в production — загружает весь код приложения заранее.",
+  "sections": [
+    {
+      "heading": "Цепочка файлов",
+      "paragraphs": [
+        "config/boot.rb подключает bundler/setup (только гемы из Gemfile.lock) и bootsnap/setup (кеш байткода и путей). config/application.rb подключает фреймворки (rails/all или выборочно), вызывает Bundler.require — загружает все гемы из Gemfile — и описывает класс приложения с настройками. config/environment.rb вызывает Rails.application.initialize!. config.ru передаёт готовое приложение Rack-серверу."
+      ],
+      "code": "# config/application.rb\nrequire_relative \"boot\"\nrequire \"rails/all\"\nBundler.require(*Rails.groups)\n\nmodule Shop\n  class Application < Rails::Application\n    config.load_defaults 8.1\n    config.time_zone = \"Moscow\"\n    config.autoload_lib(ignore: %w[assets tasks])\n  end\nend"
+    },
+    {
+      "heading": "initialize!",
+      "paragraphs": [
+        "Каждый компонент (Active Record, Action Pack, ваши гемы) регистрирует инициализаторы — именованные блоки с зависимостями «до» и «после». initialize! сортирует их и выполняет: загружает config/environments/<env>.rb, настраивает фреймворки, выполняет config/initializers/*.rb по алфавиту, настраивает автозагрузку, вызывает after_initialize. В production после этого выполняется eager_load! — Zeitwerk загружает все файлы app/ сразу."
+      ]
+    },
+    {
+      "heading": "Ленивая загрузка фреймворков",
+      "paragraphs": [
+        "Rails старается не загружать тяжёлые классы, пока они не нужны. Если инициализатор написать как ActiveRecord::Base.include(MyExtension), он принудительно загрузит Active Record слишком рано — со всеми настройками, которые ещё не успели примениться. Правильно — хук ActiveSupport.on_load: блок выполнится, когда класс действительно загрузится."
+      ],
+      "code": "# config/initializers/my_extension.rb\nActiveSupport.on_load(:active_record) do\n  include MyExtension          # self здесь — ActiveRecord::Base\nend"
+    },
+    {
+      "heading": "Почему запуск медленный",
+      "paragraphs": [
+        "Время запуска складывается из Bundler.require (каждый гем загружает свои файлы), инициализаторов и eager loading. Bootsnap кеширует байткод и поиск файлов. Узнать, какие гемы тяжелее всего, помогает derailed_benchmarks, а Bundler позволяет не загружать гем при старте (require: false) и подключать его там, где он нужен."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "boot.rb → application.rb (гемы и настройки) → initialize! (инициализаторы всех компонентов) → eager loading в production. Расширяйте фреймворки через ActiveSupport.on_load."
+}

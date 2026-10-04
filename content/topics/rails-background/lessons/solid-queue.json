@@ -1,0 +1,37 @@
+{
+  "title": "Solid Queue",
+  "term": "Solid Queue: очередь задач в базе данных",
+  "analogy": "очередь задач без отдельного Redis",
+  "plain": "Solid Queue — адаптер Active Job по умолчанию в Rails 8. Задачи хранятся в таблицах базы данных (PostgreSQL, MySQL или SQLite), а воркеры забирают их запросами с блокировкой строк. Отдельный Redis не нужен, а возможностей хватает большинству приложений: отложенные и повторяющиеся задачи, ограничение параллельности, приоритеты.",
+  "sections": [
+    {
+      "heading": "Как устроена",
+      "paragraphs": [
+        "Задача записывается в таблицу solid_queue_jobs, а готовая к выполнению — ещё и в solid_queue_ready_executions. Воркер выбирает пачку готовых задач запросом SELECT ... FOR UPDATE SKIP LOCKED: строки, которые уже взял другой воркер, пропускаются без ожидания. Так десятки воркеров разбирают одну очередь, не мешая друг другу.",
+        "Диспетчер переносит отложенные задачи (set(wait:)) в готовые, когда наступает их время. Супервизор запускает воркеров и диспетчеров как процессы и перезапускает упавшие. По умолчанию очередь живёт в отдельной базе queue, описанной в database.yml."
+      ]
+    },
+    {
+      "heading": "Запуск",
+      "paragraphs": [
+        "bin/jobs запускает супервизор. В небольших приложениях его можно запустить внутри Puma плагином — тогда не нужен отдельный процесс. Состав воркеров и очередей задаётся в config/queue.yml, повторяющиеся задачи — в config/recurring.yml. Веб-интерфейс для просмотра и повтора задач — гем Mission Control — Jobs."
+      ],
+      "code": "# config/queue.yml\nproduction:\n  dispatchers:\n    - polling_interval: 1\n  workers:\n    - queues: [critical, default]\n      threads: 5\n      processes: 2\n    - queues: [reports]\n      threads: 1\n\n# config/recurring.yml\nproduction:\n  cleanup_sessions:\n    class: CleanupSessionsJob\n    schedule: every day at 3am"
+    },
+    {
+      "heading": "Ограничение параллельности",
+      "paragraphs": [
+        "limits_concurrency не даёт выполнять одновременно больше N задач с одинаковым ключом. Пример: синхронизация одного аккаунта с внешней системой не должна идти в два потока, иначе данные перепишут друг друга."
+      ],
+      "code": "class SyncAccountJob < ApplicationJob\n  limits_concurrency to: 1, key: ->(account) { account }, duration: 5.minutes\n\n  def perform(account) = ExternalCrm.sync(account)\nend"
+    },
+    {
+      "heading": "Когда нужен Sidekiq",
+      "paragraphs": [
+        "Sidekiq хранит задачи в Redis и обрабатывает их быстрее: это давно проверенный инструмент с богатой экосистемой (Pro и Enterprise — батчи, уникальные задачи, ограничители). Если очередь — тысячи задач в секунду или Redis уже есть в инфраструктуре, Sidekiq остаётся сильным выбором. Для большинства приложений Solid Queue проще: одной системой в инфраструктуре меньше, а задачи видно обычным SQL."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "Solid Queue хранит задачи в базе и раздаёт их воркерам через FOR UPDATE SKIP LOCKED. Без Redis, с отложенными, повторяющимися и ограниченными по параллельности задачами."
+}

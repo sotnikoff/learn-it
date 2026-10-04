@@ -1,0 +1,35 @@
+{
+  "title": "Защита по умолчанию",
+  "term": "CSRF, XSS, SQL-инъекции и заголовки безопасности",
+  "analogy": "замки, которые Rails ставит за вас",
+  "plain": "Rails из коробки закрывает самые частые уязвимости веба: проверяет CSRF-токен, экранирует вывод в шаблонах, отправляет параметры в SQL отдельно от запроса, шифрует cookies и ставит заголовки безопасности. Большинство дыр в Rails-приложениях появляется, когда разработчик сам обходит эти механизмы.",
+  "sections": [
+    {
+      "heading": "Что включено",
+      "paragraphs": [
+        "CSRF: каждая форма содержит токен, не-GET запросы без него отклоняются. XSS: <%= %> экранирует HTML. SQL-инъекции: where(name: x) и плейсхолдеры ? передают значения отдельно от текста запроса. Сессии: cookies подписаны и зашифрованы. Массовое присваивание: strong parameters. Открытые редиректы: в новых приложениях redirect_to на чужой хост бросает исключение. HostAuthorization: запросы с поддельным заголовком Host отклоняются."
+      ]
+    },
+    {
+      "heading": "Заголовки",
+      "paragraphs": [
+        "Rails по умолчанию отправляет X-Frame-Options (запрет встраивать сайт в чужой iframe), X-Content-Type-Options, Referrer-Policy. Content Security Policy настраивается в config/initializers/content_security_policy.rb: она говорит браузеру, откуда можно загружать скрипты, и сильно ограничивает ущерб от XSS. config.force_ssl включает HTTPS, HSTS и флаг secure у cookies."
+      ],
+      "code": "# config/initializers/content_security_policy.rb\nRails.application.configure do\n  config.content_security_policy do |policy|\n    policy.default_src :self\n    policy.script_src  :self\n    policy.img_src     :self, :https, :data\n  end\n  config.content_security_policy_nonce_generator = ->(request) { SecureRandom.base64(16) }\nend"
+    },
+    {
+      "heading": "Инструменты",
+      "paragraphs": [
+        "Brakeman — статический анализатор безопасности для Rails, в новых приложениях он уже подключён (bin/brakeman) и запускается в CI. Он находит SQL с интерполяцией, небезопасные редиректы, html_safe на пользовательских данных. Для уязвимостей в зависимостях — bundler-audit или Dependabot. Обновления безопасности Rails выходят патч-версиями, и их стоит ставить сразу."
+      ]
+    },
+    {
+      "heading": "Шифрование данных",
+      "paragraphs": [
+        "Active Record Encryption шифрует отдельные колонки: encrypts :passport_number. Данные в базе и бэкапах зашифрованы, а в модели — обычная строка. С deterministic: true по зашифрованной колонке можно искать на точное совпадение (ценой меньшей стойкости). Ключи хранятся в credentials."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "CSRF, экранирование, параметризованный SQL и шифрованные cookies уже работают. Добавьте CSP, force_ssl и Brakeman в CI — и не обходите встроенные механизмы."
+}

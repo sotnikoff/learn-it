@@ -1,0 +1,14 @@
+{
+  "title": "Active Record в продакшене",
+  "analogy": "запросы, которые не роняют базу",
+  "summary": "Что происходит с Active Record на реальных объёмах: N+1, массовые операции, индексы, счётчики, миграции без простоя, пул соединений и несколько баз данных. Большинство проблем производительности Rails-приложений живут здесь.",
+  "lessons": [
+    "n-plus-one",
+    "batches-and-bulk",
+    "indexes-and-explain",
+    "counter-caches",
+    "safe-migrations",
+    "connection-pool",
+    "multiple-databases"
+  ]
+}

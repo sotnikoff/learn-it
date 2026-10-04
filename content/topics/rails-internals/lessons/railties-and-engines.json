@@ -1,0 +1,30 @@
+{
+  "title": "Railtie и engines",
+  "term": "Как гемы встраиваются в Rails",
+  "analogy": "разъём, через который гем подключается к приложению",
+  "plain": "Railtie — точка входа гема в жизнь Rails-приложения: через неё гем добавляет инициализаторы, настройки, rake-задачи и генераторы. Сами Active Record и Action Pack подключены через свои Railtie. Engine — это Railtie, у которой ещё есть свои app/, маршруты и миграции, то есть мини-приложение внутри приложения.",
+  "sections": [
+    {
+      "heading": "Railtie",
+      "paragraphs": [
+        "Гему достаточно определить подкласс Rails::Railtie — Rails найдёт его при загрузке. В нём объявляют инициализаторы, пространство настроек config.my_gem, задачи и подписки на события. Так гем вроде lograge или sentry-rails настраивает себя без единой строки в вашем приложении."
+      ],
+      "code": "module AuditLog\n  class Railtie < Rails::Railtie\n    config.audit_log = ActiveSupport::OrderedOptions.new\n    config.audit_log.enabled = true\n\n    initializer \"audit_log.subscribe\" do |app|\n      next unless app.config.audit_log.enabled\n      ActiveSupport::Notifications.subscribe(\"process_action.action_controller\") do |event|\n        AuditLog.record(event.payload)\n      end\n    end\n\n    rake_tasks { load \"audit_log/tasks.rake\" }\n  end\nend"
+    },
+    {
+      "heading": "Engine",
+      "paragraphs": [
+        "Engine добавляет к Railtie собственные каталоги app/, config/routes.rb, db/migrate и ассеты. Его монтируют в маршрутах основного приложения. isolate_namespace изолирует имена: модели, хелперы и маршруты движка не смешиваются с приложением. Devise, Solid Queue, Mission Control и Active Storage устроены как engines."
+      ],
+      "code": "module Blog\n  class Engine < ::Rails::Engine\n    isolate_namespace Blog\n  end\nend\n\n# config/routes.rb основного приложения\nmount Blog::Engine, at: \"/blog\""
+    },
+    {
+      "heading": "Rails::Application",
+      "paragraphs": [
+        "Само приложение — тоже Engine (Rails::Application наследуется от Rails::Engine), только главный. Поэтому всё, что умеет приложение — маршруты, инициализаторы, каталоги, — умеет и engine. Это объясняет, почему модульный монолит на engines возможен: каждая часть — почти самостоятельное приложение."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "Railtie — разъём для гемов: инициализаторы, настройки, задачи. Engine — Railtie с собственными app/, маршрутами и миграциями, а само приложение — главный engine."
+}

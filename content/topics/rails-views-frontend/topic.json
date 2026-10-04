@@ -1,0 +1,13 @@
+{
+  "title": "Представления и фронтенд",
+  "analogy": "HTML с сервера, оживлённый Hotwire",
+  "summary": "Как Rails рисует HTML, как устроены формы и защита от подделки запросов, как CSS и JavaScript попадают в браузер без сборщика, и как Turbo и Stimulus делают страницы быстрыми почти без JavaScript. Плюс режим API для отдельного фронтенда.",
+  "lessons": [
+    "views-and-erb",
+    "forms",
+    "assets",
+    "turbo",
+    "stimulus",
+    "api-mode"
+  ]
+}

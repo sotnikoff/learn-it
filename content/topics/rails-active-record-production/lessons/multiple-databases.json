@@ -1,0 +1,37 @@
+{
+  "title": "Несколько баз данных",
+  "term": "Реплики, connects_to и шардирование",
+  "analogy": "читать из копий, писать в оригинал",
+  "plain": "Rails умеет работать с несколькими базами: основной для записи, репликами для чтения, отдельными базами для разных частей приложения и шардами — частями данных, разложенными по разным серверам. Переключение задаётся декларативно в модели и автоматически в middleware.",
+  "sections": [
+    {
+      "heading": "Реплики для чтения",
+      "paragraphs": [
+        "Реплика — копия основной базы, которая догоняет её с небольшой задержкой. Чтение с реплик разгружает основную базу. В database.yml описывают primary и primary_replica (с replica: true), а в ApplicationRecord — connects_to с ролями writing и reading."
+      ],
+      "code": "class ApplicationRecord < ActiveRecord::Base\n  primary_abstract_class\n  connects_to database: { writing: :primary, reading: :primary_replica }\nend\n\nActiveRecord::Base.connected_to(role: :reading) do\n  Report.monthly_totals          # запрос уйдёт на реплику\nend"
+    },
+    {
+      "heading": "Автопереключение и задержка репликации",
+      "paragraphs": [
+        "Rails может переключать роль сам: GET и HEAD-запросы читают с реплики, остальные — с основной базы. Проблема — задержка репликации: пользователь сохранил профиль, его перенаправили на страницу профиля, и GET с реплики показал старые данные. Поэтому middleware запоминает в сессии время последней записи и ещё некоторое время (delay) читает этого пользователя с основной базы."
+      ],
+      "code": "# config/environments/production.rb\nconfig.active_record.database_selector = { delay: 2.seconds }\nconfig.active_record.database_resolver = ActiveRecord::Middleware::DatabaseSelector::Resolver\nconfig.active_record.database_resolver_context = ActiveRecord::Middleware::DatabaseSelector::Resolver::Session"
+    },
+    {
+      "heading": "Отдельные базы",
+      "paragraphs": [
+        "Часть моделей может жить в другой базе: аналитика, логи аудита, а в Rails 8 — очереди Solid Queue, кеш Solid Cache и Solid Cable. Для них делают отдельный абстрактный класс с connects_to, и модели наследуются от него. Ограничение: JOIN между базами невозможен, и транзакция не охватывает обе базы."
+      ]
+    },
+    {
+      "heading": "Шардирование",
+      "paragraphs": [
+        "Когда одна база не справляется с записью, данные делят по ключу (например, по аккаунту) на несколько баз с одинаковой схемой — шарды. Rails умеет переключать шард: connected_to(shard: :shard_two). Но выбор шарда для каждого запроса, перенос клиентов между шардами и запросы по всем шардам — это архитектура, которую придётся строить самим. До шардирования обычно имеет смысл исчерпать вертикальное масштабирование, реплики и вынос отдельных частей в свои базы."
+      ],
+      "code": "class ShardRecord < ApplicationRecord\n  self.abstract_class = true\n  connects_to shards: {\n    shard_one: { writing: :shard_one },\n    shard_two: { writing: :shard_two }\n  }\nend\n\nShardRecord.connected_to(shard: account.shard.to_sym) do\n  Invoice.where(account:).sum(:total)\nend"
+    }
+  ],
+  "mapping": [],
+  "takeaway": "Реплики разгружают чтение, но отстают — Rails учитывает это задержкой после записи. Шардирование Rails поддерживает на уровне соединений, а остальную архитектуру строите вы."
+}

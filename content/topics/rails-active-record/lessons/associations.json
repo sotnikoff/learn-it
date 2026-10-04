@@ -1,0 +1,36 @@
+{
+  "title": "Связи между моделями",
+  "term": "belongs_to, has_many, has_many :through и полиморфные связи",
+  "analogy": "внешний ключ, превращённый в методы",
+  "plain": "Связи описывают, как модели ссылаются друг на друга, и превращают внешние ключи в удобные методы: order.user, user.orders, user.orders.create(...). Rails выводит имена таблиц и колонок из имени связи, поэтому чаще всего достаточно одной строки.",
+  "sections": [
+    {
+      "heading": "Основные связи",
+      "paragraphs": [
+        "belongs_to — у этой модели есть колонка-ссылка (orders.user_id). С Rails 5 она по умолчанию обязательна: заказ без пользователя не сохранится. has_many и has_one — обратная сторона, колонка у другой таблицы. has_many :through — многие ко многим через промежуточную модель, у которой могут быть свои поля."
+      ],
+      "code": "class User < ApplicationRecord\n  has_many :orders, dependent: :restrict_with_error\n  has_many :memberships\n  has_many :teams, through: :memberships\nend\n\nclass Order < ApplicationRecord\n  belongs_to :user\n  has_many :line_items, dependent: :destroy\n  has_many :products, through: :line_items\nend\n\nuser.orders.create!(total: 500)      # user_id подставится сам\norder.products.where(category: \"чай\")"
+    },
+    {
+      "heading": "dependent",
+      "paragraphs": [
+        "Что делать с заказами при удалении пользователя? dependent: :destroy удалит их по одному с коллбэками (медленно на больших объёмах). :delete_all — одним SQL без коллбэков. :nullify — обнулит ссылку. :restrict_with_error — запретит удаление, пока есть связанные записи. Без dependent Rails ничего не сделает, и внешний ключ в базе не даст удалить пользователя — или, если ключа нет, останутся записи-сироты."
+      ]
+    },
+    {
+      "heading": "Полиморфные связи",
+      "paragraphs": [
+        "Комментарии могут принадлежать и статье, и фото. Полиморфная связь хранит две колонки: commentable_type (имя класса) и commentable_id. Удобно, но у такой связи не может быть внешнего ключа в базе, и запросы по ней сложнее индексировать. Используйте её, когда типов действительно много и они однородны по смыслу."
+      ],
+      "code": "class Comment < ApplicationRecord\n  belongs_to :commentable, polymorphic: true\nend\n\nclass Article < ApplicationRecord\n  has_many :comments, as: :commentable\nend"
+    },
+    {
+      "heading": "Связи — это запросы",
+      "paragraphs": [
+        "user.orders — тоже Relation, со всеми методами: where, order, sum. Это значит, что каждый вызов связи в цикле — запрос в базу. Перебрать 50 заказов и вызвать у каждого order.user — 50 лишних запросов. Это проблема N+1, ей посвящён отдельный урок."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "Связи превращают внешние ключи в методы. Всегда решайте, что делать с зависимыми записями (dependent), и помните, что вызов связи — это запрос."
+}

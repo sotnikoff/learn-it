@@ -1,0 +1,36 @@
+{
+  "title": "Active Support",
+  "term": "Расширения ядра, Concern, CurrentAttributes и утилиты",
+  "analogy": "набор инструментов, на котором стоит весь Rails",
+  "plain": "Active Support — библиотека, на которой построены остальные части Rails. Она расширяет стандартные классы Ruby (3.days.ago, blank?), даёт Concern, CurrentAttributes, уведомления, кеш, работу с часовыми поясами, склонение слов и подпись сообщений. Многое из того, что кажется «синтаксисом Rails», — это методы Active Support.",
+  "sections": [
+    {
+      "heading": "Расширения ядра",
+      "paragraphs": [
+        "blank? и present? (nil, пустая строка, строка из пробелов, пустой массив — blank), presence, try, in?, 5.minutes, 2.days.from_now, \"user_profile\".camelize, \"person\".pluralize, Hash#deep_merge, Array#to_sentence. Это monkey patching стандартных классов, и он загружается вместе с Rails. Вне Rails можно подключать выборочно: require \"active_support/core_ext/numeric/time\"."
+      ],
+      "code": "\"  \".blank?               # => true\nparams[:q].presence || \"все\"\nuser.try(:profile)&.name\n3.days.ago                 # ActiveSupport::TimeWithZone в часовом поясе приложения\n%w[tea coffee juice].to_sentence     # => \"tea, coffee, and juice\""
+    },
+    {
+      "heading": "Время и часовые пояса",
+      "paragraphs": [
+        "Time.current и Time.zone.now возвращают время в часовом поясе приложения (config.time_zone), а Time.now — в поясе сервера. В базе Rails хранит время в UTC и переводит при чтении. Правило: в коде Rails всегда Time.current, Date.current и in_time_zone, никогда Time.now и Date.today — иначе на сервере в UTC «сегодня» наступит в 3 часа ночи по Москве."
+      ]
+    },
+    {
+      "heading": "CurrentAttributes",
+      "paragraphs": [
+        "Current — класс с атрибутами, которые живут в рамках одного запроса или задачи: текущий пользователь, аккаунт, request_id. Rails сбрасывает их после каждого запроса и задачи. Удобно для данных, которые нужны глубоко в коде (аудит, мультиарендность), но злоупотребление превращает Current в глобальную переменную, от которой неявно зависит половина кода."
+      ],
+      "code": "class Current < ActiveSupport::CurrentAttributes\n  attribute :session, :account\n  delegate :user, to: :session, allow_nil: true\nend\n\nCurrent.account = Account.find_by!(subdomain: request.subdomain)\nCurrent.account.projects       # где угодно в рамках запроса"
+    },
+    {
+      "heading": "Остальное",
+      "paragraphs": [
+        "Inflector отвечает за превращение User в users и обратно; для слов-исключений правила добавляют в config/initializers/inflections.rb. MessageVerifier и MessageEncryptor подписывают и шифруют данные — на них построены подписанные cookies и signed_id. Duration и TimeWithZone делают арифметику дат корректной с учётом перехода на летнее время."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "Active Support — фундамент Rails: расширения ядра, время с часовыми поясами (Time.current, а не Time.now), CurrentAttributes и утилиты для подписи и склонения."
+}

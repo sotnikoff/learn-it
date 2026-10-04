@@ -1,0 +1,29 @@
+{
+  "title": "Stimulus",
+  "term": "Контроллеры Stimulus, targets, actions и values",
+  "analogy": "немного JavaScript, привязанного к HTML атрибутами",
+  "plain": "Stimulus — маленький JavaScript-фреймворк для тех мест, где без кода в браузере не обойтись: скопировать в буфер, показать или скрыть блок, посчитать сумму в форме. Поведение подключается к существующему HTML через data-атрибуты, а состояние живёт в самой разметке.",
+  "sections": [
+    {
+      "heading": "Как устроен",
+      "paragraphs": [
+        "data-controller подключает класс-контроллер к элементу. data-*-target помечает элементы, с которыми он работает. data-action связывает событие с методом. Контроллер создаётся, когда элемент появляется на странице (в том числе после Turbo-обновления), и отключается, когда элемент исчезает, — поэтому проблем с «инициализацией после загрузки» нет."
+      ],
+      "code": "<div data-controller=\"clipboard\">\n  <input data-clipboard-target=\"source\" value=\"PROMO2026\" readonly>\n  <button data-action=\"click->clipboard#copy\">Скопировать</button>\n</div>\n\n// app/javascript/controllers/clipboard_controller.js\nimport { Controller } from \"@hotwired/stimulus\"\n\nexport default class extends Controller {\n  static targets = [\"source\"]\n\n  copy() {\n    navigator.clipboard.writeText(this.sourceTarget.value)\n  }\n}"
+    },
+    {
+      "heading": "Values и outlets",
+      "paragraphs": [
+        "Values — типизированные параметры из data-атрибутов (data-countdown-seconds-value=\"60\"), с методом-наблюдателем на изменение. Outlets — ссылки на другие контроллеры на странице, чтобы они могли общаться. Классы (static classes) выносят имена CSS-классов в разметку, чтобы контроллер не знал о стилях."
+      ]
+    },
+    {
+      "heading": "Философия",
+      "paragraphs": [
+        "Stimulus не рендерит HTML — это делает сервер. Он только добавляет поведение. Поэтому контроллеры маленькие и универсальные: один toggle, один clipboard, один autosubmit используются по всему приложению. Если же интерфейс — сложное состояние на клиенте (редактор, карта, таблица на тысячи строк с фильтрами), разумнее подключить React или другую библиотеку для этого участка."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "Stimulus добавляет поведение к серверному HTML через data-атрибуты. Контроллеры маленькие и универсальные, рендеринг остаётся на сервере."
+}

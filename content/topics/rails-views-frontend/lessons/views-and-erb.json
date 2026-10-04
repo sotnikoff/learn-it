@@ -1,0 +1,38 @@
+{
+  "title": "Шаблоны, layout и partials",
+  "term": "ERB, layout, partials и хелперы",
+  "analogy": "HTML с вставками Ruby, собранный из кусков",
+  "plain": "Представления в Rails — шаблоны ERB: HTML со вставками Ruby. Страница собирается из layout (общий каркас), шаблона экшена и partials (переиспользуемых кусков). Всё, что выводится через <%= %>, автоматически экранируется — это главная защита от XSS.",
+  "sections": [
+    {
+      "heading": "ERB",
+      "paragraphs": [
+        "<% %> выполняет Ruby без вывода (циклы, условия), <%= %> выводит результат. Шаблон видит переменные экземпляра контроллера и хелперы. Логику в шаблонах держат минимальной: вычисления — в модели, презентере или хелпере."
+      ],
+      "code": "<!-- app/views/articles/index.html.erb -->\n<h1>Статьи</h1>\n<% if @articles.any? %>\n  <%= render @articles %>             <!-- partial _article для каждой -->\n<% else %>\n  <p>Пока ничего нет</p>\n<% end %>\n<%= link_to \"Новая статья\", new_article_path %>"
+    },
+    {
+      "heading": "Layout",
+      "paragraphs": [
+        "app/views/layouts/application.html.erb — каркас всех страниц: head, шапка, подвал. Место для шаблона экшена — yield. content_for позволяет шаблону передать кусок в другое место layout: например, заголовок страницы или дополнительный скрипт. Контроллер может выбрать другой layout: layout \"admin\"."
+      ],
+      "code": "<!-- layouts/application.html.erb -->\n<title><%= content_for(:title) || \"Магазин\" %></title>\n<body>\n  <%= render \"shared/header\" %>\n  <%= yield %>\n</body>\n\n<!-- в шаблоне страницы -->\n<% content_for :title, @article.title %>"
+    },
+    {
+      "heading": "Partials",
+      "paragraphs": [
+        "Partial — шаблон, имя файла которого начинается с подчёркивания: _article.html.erb. render @articles отрисует partial для каждой записи, передав её в локальную переменную article. Переменные в partial лучше передавать явно через locals, а не полагаться на @переменные контроллера — так partial можно использовать где угодно."
+      ],
+      "code": "<!-- articles/_article.html.erb -->\n<article id=\"<%= dom_id(article) %>\">\n  <h2><%= link_to article.title, article %></h2>\n  <%= render \"authors/byline\", author: article.author %>\n</article>"
+    },
+    {
+      "heading": "Экранирование и html_safe",
+      "paragraphs": [
+        "Если пользователь сохранит заголовок <script>alert(1)</script>, <%= article.title %> выведет его как текст, а не как код. Rails экранирует всё, кроме строк, помеченных как безопасные (html_safe) — их выводят как есть. Хелперы вроде link_to и content_tag возвращают безопасные строки, потому что сами экранируют содержимое.",
+        "raw и html_safe на данных пользователя — прямой путь к XSS. Если нужно разрешить часть разметки (жирный, ссылки), используют sanitize — он вырезает всё опасное."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "Страница = layout + шаблон экшена + partials. <%= %> экранирует вывод — никогда не помечайте пользовательские данные как html_safe."
+}

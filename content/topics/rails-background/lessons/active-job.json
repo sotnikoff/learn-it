@@ -1,0 +1,59 @@
+{
+  "title": "Active Job",
+  "term": "Active Job: фоновые задачи",
+  "analogy": "сдать вещь в химчистку и получить квитанцию",
+  "plain": "Всё, что долго (письма, отчёты, обработка файлов, вызовы внешних API), выносят из HTTP-запроса в фоновую задачу. Active Job — общий интерфейс задач: вы пишете класс с методом perform и вызываете perform_later, а выполняет его отдельный процесс через адаптер очереди: Solid Queue, Sidekiq или другой.",
+  "sections": [
+    {
+      "heading": "Химчистка",
+      "paragraphs": [
+        "Вы не ждёте у стойки, пока почистят пальто, — сдаёте его, получаете квитанцию и уходите. Чистка происходит потом, в цеху. Если что-то пошло не так, вас позовут, а не будут держать у стойки.",
+        "perform_later — это сдача в химчистку: задача сериализуется и ставится в очередь, а запрос сразу отвечает пользователю. Воркер в отдельном процессе забирает задачу и выполняет."
+      ]
+    },
+    {
+      "heading": "Задача",
+      "paragraphs": [
+        "Аргументы задачи сериализуются. Записи Active Record передаются через GlobalID — в очередь кладётся не объект, а ссылка вида gid://app/User/5, и воркер загрузит актуальную версию из базы. Поэтому в задачу передают записи или простые значения, но не сложные объекты в памяти."
+      ],
+      "code": "class GenerateInvoiceJob < ApplicationJob\n  queue_as :default\n\n  def perform(order)\n    pdf = InvoicePdf.new(order).render\n    order.invoice.attach(io: StringIO.new(pdf), filename: \"invoice-#{order.id}.pdf\")\n    OrderMailer.invoice_ready(order).deliver_later\n  end\nend\n\nGenerateInvoiceJob.perform_later(order)\nGenerateInvoiceJob.set(wait: 10.minutes, queue: :low).perform_later(order)"
+    },
+    {
+      "heading": "Повторы и отказ",
+      "paragraphs": [
+        "retry_on повторяет задачу при указанной ошибке с паузами, растущими с каждой попыткой. Когда попытки кончатся, ошибка уходит в трекер. discard_on просто отбрасывает задачу — например, если запись удалили, пока задача ждала очереди (ActiveJob::DeserializationError)."
+      ],
+      "code": "class SyncToCrmJob < ApplicationJob\n  retry_on Net::OpenTimeout, Faraday::ServerError,\n           wait: :polynomially_longer, attempts: 8\n  discard_on ActiveJob::DeserializationError\n\n  def perform(contact) = Crm.upsert(contact)\nend"
+    },
+    {
+      "heading": "Очереди",
+      "paragraphs": [
+        "Задачи раскладывают по очередям: срочные (письма о сбросе пароля), обычные и медленные (отчёты). Воркеры настраивают так, чтобы медленные задачи не перекрывали срочные: разные потоки или процессы на разные очереди, либо приоритеты."
+      ]
+    }
+  ],
+  "mapping": [
+    {
+      "tech": "perform_later",
+      "real": "Сдать вещь и получить квитанцию"
+    },
+    {
+      "tech": "Очередь",
+      "real": "Стопка квитанций в цеху"
+    },
+    {
+      "tech": "Воркер",
+      "real": "Мастер химчистки"
+    },
+    {
+      "tech": "retry_on",
+      "real": "Не вышло — попробуют ещё раз позже"
+    },
+    {
+      "tech": "GlobalID",
+      "real": "В квитанции номер вещи, а не сама вещь"
+    }
+  ],
+  "caveat": "В химчистке вещь не почистят дважды. Фоновая задача может выполниться повторно — после сбоя воркера, таймаута или повтора. Поэтому задачи пишут так, чтобы повторное выполнение ничего не ломало.",
+  "takeaway": "Всё долгое — в фоновые задачи через perform_later. Передавайте записи (через GlobalID) и простые значения и настраивайте retry_on и discard_on."
+}

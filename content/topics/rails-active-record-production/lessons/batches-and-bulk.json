@@ -1,0 +1,31 @@
+{
+  "title": "Пакетная обработка",
+  "term": "find_each, in_batches, insert_all и upsert_all",
+  "analogy": "разгружать фуру коробками, а не всю разом",
+  "plain": "Product.all.each на миллионе строк загрузит в память миллион объектов. find_each перебирает записи пачками по тысяче. Для массовой вставки и обновления есть insert_all, upsert_all и update_all — один SQL вместо тысяч, но без валидаций и коллбэков.",
+  "sections": [
+    {
+      "heading": "Перебор пачками",
+      "paragraphs": [
+        "find_each грузит записи пачками (по умолчанию 1000) в порядке первичного ключа и отдаёт по одной в блок. Память не растёт, сколько бы ни было записей. in_batches отдаёт сами пачки как Relation — удобно, чтобы делать массовые операции по частям, не блокируя таблицу надолго.",
+        "Ограничение: свой order в find_each не работает — он всегда идёт по первичному ключу (можно выбрать только направление: order: :desc), иначе пагинация между пачками была бы неверной."
+      ],
+      "code": "User.where(subscribed: true).find_each(batch_size: 500) do |user|\n  NewsletterMailer.weekly(user).deliver_later\nend\n\nOrder.where(status: \"stale\").in_batches(of: 1_000) do |batch|\n  batch.update_all(status: \"archived\")\n  sleep 0.1        # дать базе передохнуть\nend"
+    },
+    {
+      "heading": "Массовая вставка и upsert",
+      "paragraphs": [
+        "insert_all вставляет массив хешей одним INSERT. upsert_all вставляет или обновляет при конфликте по уникальному ключу (INSERT ... ON CONFLICT DO UPDATE). Это в десятки раз быстрее, чем create в цикле. Но объектов модели не создаётся: валидации и коллбэки не вызываются, created_at и updated_at Rails заполнит сам (с Rails 7), а остальное — ваша ответственность."
+      ],
+      "code": "Product.upsert_all(\n  rows.map { { sku: it[:sku], name: it[:name], price: it[:price] } },\n  unique_by: :sku          # нужен уникальный индекс по sku\n)"
+    },
+    {
+      "heading": "update_all и delete_all",
+      "paragraphs": [
+        "update_all меняет все записи Relation одним UPDATE, delete_all — удаляет одним DELETE. Обе пропускают коллбэки и валидации. Атомарные выражения тоже можно: update_all(\"views = views + 1\"). Для удаления больших объёмов — по частям через in_batches, чтобы не держать огромную транзакцию и не нагружать репликацию."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "Много записей — find_each и in_batches. Массовая запись — insert_all, upsert_all и update_all, но помните: валидации и коллбэки они пропускают."
+}

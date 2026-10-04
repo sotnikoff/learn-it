@@ -1,0 +1,13 @@
+{
+  "title": "Rails изнутри",
+  "analogy": "что происходит за магией",
+  "summary": "Как Rails загружается, как гемы встраиваются в приложение через Railtie, что даёт Active Support, как работает перезагрузка кода и почему из-за неё бывают странные ошибки, и как Active Record превращает вызов метода в SQL.",
+  "lessons": [
+    "boot-process",
+    "railties-and-engines",
+    "active-support",
+    "code-reloading",
+    "active-record-internals",
+    "arel"
+  ]
+}

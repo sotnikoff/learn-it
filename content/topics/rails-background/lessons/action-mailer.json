@@ -1,0 +1,29 @@
+{
+  "title": "Action Mailer",
+  "term": "Письма: мейлеры, шаблоны, превью и deliver_later",
+  "analogy": "письмо — это контроллер, который рисует email",
+  "plain": "Мейлер устроен как контроллер: методы класса — это письма, переменные экземпляра попадают в шаблон, а шаблоны лежат в app/views. Отправляют письма через deliver_later — фоновой задачей, чтобы запрос не ждал SMTP-сервер.",
+  "sections": [
+    {
+      "heading": "Мейлер и шаблон",
+      "paragraphs": [
+        "Метод мейлера готовит данные и вызывает mail с адресатом и темой. Для каждого письма можно сделать HTML и текстовую версии — Rails соберёт их в одно письмо. Ссылки в письмах должны быть абсолютными: для этого задают default_url_options с хостом."
+      ],
+      "code": "class OrderMailer < ApplicationMailer\n  default from: \"Магазин <shop@example.com>\"\n\n  def shipped(order)\n    @order = order\n    mail to: order.user.email, subject: \"Заказ №#{order.number} отправлен\"\n  end\nend\n\n<!-- app/views/order_mailer/shipped.html.erb -->\n<p>Ваш заказ отправлен. <%= link_to \"Отследить\", order_url(@order) %></p>\n\nOrderMailer.shipped(order).deliver_later"
+    },
+    {
+      "heading": "Превью",
+      "paragraphs": [
+        "Файлы в test/mailers/previews показывают письма в браузере по адресу /rails/mailers без реальной отправки. Это быстрый способ проверить вёрстку и тексты всех писем. В тестах письма не отправляются, а копятся в ActionMailer::Base.deliveries, и их можно проверить."
+      ]
+    },
+    {
+      "heading": "Доставка",
+      "paragraphs": [
+        "В продакшене письма отправляют через SMTP или API почтового сервиса (Postmark, SES, Mailgun) — для этого настраивают delivery_method. deliver_now отправляет сразу и блокирует запрос, deliver_later ставит задачу в очередь mailers. Для входящей почты в Rails есть Action Mailbox: письма, пришедшие на адрес приложения, превращаются в вызовы ваших классов-обработчиков."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "Мейлер — это контроллер для писем. Проверяйте письма через превью и отправляйте через deliver_later."
+}

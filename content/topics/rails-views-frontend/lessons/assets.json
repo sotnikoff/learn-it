@@ -1,0 +1,31 @@
+{
+  "title": "CSS и JavaScript",
+  "term": "Propshaft, importmap и сборщики",
+  "analogy": "файлы с отпечатком в имени, которые кешируются навсегда",
+  "plain": "По умолчанию Rails 8 не собирает фронтенд. Propshaft добавляет к именам файлов отпечаток содержимого и раздаёт их, а importmap позволяет браузеру загружать JavaScript-модули напрямую, без сборщика. Если нужен TypeScript, React или Tailwind — подключают jsbundling или cssbundling с внешним инструментом.",
+  "sections": [
+    {
+      "heading": "Propshaft",
+      "paragraphs": [
+        "Propshaft делает две вещи. Добавляет к имени файла хеш содержимого: application.css превращается в application-2f8c1e.css. И переписывает ссылки на такие файлы в CSS. Благодаря хешу файлы можно кешировать в браузере и CDN навсегда: изменился файл — изменилось имя.",
+        "В разработке Propshaft раздаёт файлы на лету, в продакшене команда assets:precompile копирует их с хешами в public/assets, откуда их отдаёт веб-сервер или CDN. Предыдущий конвейер Sprockets умел ещё и компилировать (SCSS, CoffeeScript), Propshaft сознательно этого не делает."
+      ],
+      "code": "<%= stylesheet_link_tag :app %>\n<%= javascript_importmap_tags %>\n<%= image_tag \"logo.svg\" %>\n<!-- → <img src=\"/assets/logo-9a1b2c3d.svg\"> -->"
+    },
+    {
+      "heading": "importmap",
+      "paragraphs": [
+        "Современные браузеры умеют загружать ES-модули и понимают import maps — таблицу «имя модуля → адрес». importmap-rails генерирует такую таблицу, и import \"@hotwired/turbo-rails\" в вашем коде браузер разрешит сам. Никакого node_modules и сборки. Внешнюю библиотеку добавляют командой bin/importmap pin — файл скачивается в vendor/javascript."
+      ],
+      "code": "# config/importmap.rb\npin \"application\"\npin \"@hotwired/turbo-rails\", to: \"turbo.min.js\"\npin_all_from \"app/javascript/controllers\", under: \"controllers\"\n\nbin/importmap pin chart.js"
+    },
+    {
+      "heading": "Когда нужен сборщик",
+      "paragraphs": [
+        "importmap не умеет компилировать: TypeScript, JSX и npm-пакеты, которые не распространяются как ES-модули, требуют сборки. Тогда используют jsbundling-rails (esbuild, bun, rollup) и cssbundling-rails или tailwindcss-rails. Сборщик пишет результат в app/assets/builds, а Propshaft раздаёт его как обычный файл. bin/dev запускает сервер и сборщик в режиме наблюдения одновременно."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "Propshaft даёт файлам имена с хешем, importmap — JavaScript без сборки. Сборщик подключают, только когда нужен TypeScript, JSX или сложный CSS."
+}

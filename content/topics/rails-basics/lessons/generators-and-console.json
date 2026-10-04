@@ -1,0 +1,38 @@
+{
+  "title": "Генераторы и консоль",
+  "term": "rails new, generate, console и задачи db:*",
+  "analogy": "заготовки, которые экономят первые полчаса",
+  "plain": "Команда rails умеет создавать приложение, генерировать заготовки моделей и контроллеров, управлять базой и открывать консоль с загруженным приложением. Генераторы не делают ничего секретного: они просто создают файлы, которые вы могли бы написать руками.",
+  "sections": [
+    {
+      "heading": "Создать приложение",
+      "paragraphs": [
+        "rails new создаёт проект с базой SQLite, Propshaft, importmap, Hotwire, Solid-стеком, Dockerfile и конфигурацией Kamal. Флаги меняют набор: --database=postgresql, --css=tailwind, --api (без представлений и фронтенда), --skip-test."
+      ],
+      "code": "rails new shop --database=postgresql\ncd shop\nbin/setup      # установить гемы, создать базу, загрузить схему\nbin/dev        # запустить сервер (и сборку CSS/JS, если нужна)"
+    },
+    {
+      "heading": "Генераторы",
+      "paragraphs": [
+        "rails generate model создаёт модель, миграцию и тест. generate controller — контроллер, экшены, шаблоны и маршруты. generate scaffold — всё сразу: модель, миграцию, полный CRUD-контроллер, шаблоны, маршрут resources и тесты. Scaffold хорош для изучения и прототипов, но в реальных проектах его обычно правят сильно или не используют.",
+        "Чтобы увидеть, что создаст генератор, не создавая файлов, есть флаг --pretend. Отменить генерацию — rails destroy с теми же аргументами."
+      ],
+      "code": "bin/rails generate model Product name:string price:decimal{10,2} category:references\n#   create db/migrate/20261004120000_create_products.rb\n#   create app/models/product.rb\n#   create test/models/product_test.rb\n\nbin/rails generate scaffold Order status:string total:decimal --pretend"
+    },
+    {
+      "heading": "Консоль",
+      "paragraphs": [
+        "bin/rails console — irb с загруженным приложением. Там можно создавать записи, проверять запросы, вызывать сервисы. В продакшене консоль работает с боевой базой, поэтому для осмотра используют bin/rails console --sandbox: все изменения откатятся при выходе."
+      ],
+      "code": "bin/rails console\n>> Product.count\n>> Product.where(price: ..100).to_sql     # посмотреть SQL, не выполняя\n>> app.get \"/products\"                    # сделать запрос к приложению\n>> helper.number_to_currency(1234.5)      # вызвать хелпер\n>> reload!                                # перезагрузить изменённый код"
+    },
+    {
+      "heading": "Задачи базы",
+      "paragraphs": [
+        "db:create, db:migrate, db:rollback — создать базу, выполнить миграции, откатить последнюю. db:prepare — создать базу, если её нет, и применить миграции: удобно в CI и при деплое. db:seed — загрузить начальные данные. db:reset пересоздаёт базу с нуля — только для разработки. bin/rails -T показывает все доступные задачи."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "Генераторы создают обычные файлы-заготовки, консоль — главный инструмент для экспериментов. В продакшене открывайте её с --sandbox."
+}

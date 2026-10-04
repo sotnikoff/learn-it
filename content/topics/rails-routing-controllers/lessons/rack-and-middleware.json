@@ -1,0 +1,56 @@
+{
+  "title": "Rack и middleware",
+  "term": "Интерфейс Rack и стек middleware",
+  "analogy": "цепочка постов охраны на входе в здание",
+  "plain": "Rack — общий стандарт для веб-приложений на Ruby: приложение — это объект с методом call(env), который возвращает статус, заголовки и тело. Middleware — обёртки вокруг приложения по тому же стандарту: каждая получает запрос, может что-то сделать и передать дальше, а потом обработать ответ. Сам Rails — тоже Rack-приложение.",
+  "sections": [
+    {
+      "heading": "Посты охраны",
+      "paragraphs": [
+        "Чтобы попасть в офис, вы проходите несколько постов: охрана на входе, турникет, ресепшен на этаже. Каждый пост может развернуть вас или пропустить дальше. Когда вы выходите, вы проходите те же посты в обратном порядке, и каждый может что-то отметить.",
+        "Middleware работает так же. Запрос проходит стек сверху вниз: каждая обёртка может изменить запрос, ответить сама (например, отдать статический файл или отказать) или вызвать следующую. Ответ возвращается снизу вверх, и каждая обёртка может его изменить: добавить заголовки, сжать тело, записать в лог время."
+      ]
+    },
+    {
+      "heading": "Интерфейс Rack",
+      "paragraphs": [
+        "Всё приложение сводится к одному методу. env — хеш с данными запроса (REQUEST_METHOD, PATH_INFO, заголовки HTTP_*). Ответ — массив из трёх элементов. Благодаря этому любой Ruby-сервер (Puma, Falcon, Unicorn) может запустить любое Rack-приложение (Rails, Sinatra, Roda), а middleware переносимы между фреймворками."
+      ],
+      "code": "# config.ru — минимальное Rack-приложение\napp = ->(env) do\n  [200, { \"content-type\" => \"text/plain\" }, [\"Привет с #{env[\"PATH_INFO\"]}\"]]\nend\nrun app"
+    },
+    {
+      "heading": "Свой middleware",
+      "paragraphs": [
+        "Middleware — класс, который получает следующее приложение в initialize и реализует call. Подключают его в config/application.rb. Порядок важен: middleware выше в стеке видит запрос раньше и ответ позже."
+      ],
+      "code": "class RequestTimer\n  def initialize(app) = @app = app\n\n  def call(env)\n    started = Process.clock_gettime(Process::CLOCK_MONOTONIC)\n    status, headers, body = @app.call(env)        # передать дальше\n    elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started\n    headers[\"server-timing\"] = \"app;dur=#{(elapsed * 1000).round(1)}\"\n    [status, headers, body]\n  end\nend\n\n# config/application.rb\nconfig.middleware.use RequestTimer"
+    },
+    {
+      "heading": "Стек Rails",
+      "paragraphs": [
+        "bin/rails middleware покажет весь стек — около двух десятков слоёв. Среди них: ActionDispatch::HostAuthorization (защита от подмены заголовка Host), Rack::Sendfile, ActionDispatch::Static (отдача файлов из public/), ActionDispatch::Executor (обёртка для перезагрузки кода и потокобезопасности), логирование, ShowExceptions и DebugExceptions (страницы ошибок), Cookies, Session, Flash, ContentSecurityPolicy и в конце — роутер с вашими контроллерами.",
+        "Middleware — правильное место для того, что касается всех запросов и не зависит от контроллера: заголовки, измерения, отсечение ботов (гем rack-attack), обработка health-check. А вот бизнес-логике там не место."
+      ]
+    }
+  ],
+  "mapping": [
+    {
+      "tech": "Middleware",
+      "real": "Пост охраны"
+    },
+    {
+      "tech": "Стек middleware",
+      "real": "Последовательность постов от входа до кабинета"
+    },
+    {
+      "tech": "Ответ middleware без передачи дальше",
+      "real": "Охрана развернула посетителя"
+    },
+    {
+      "tech": "Обработка ответа",
+      "real": "Отметка на выходе через те же посты"
+    }
+  ],
+  "caveat": "Охранник видит человека целиком. Middleware видит запрос до роутера, поэтому не знает, какой контроллер и экшен будут вызваны, и не имеет доступа к текущему пользователю, если аутентификация живёт в контроллере.",
+  "takeaway": "Rack-приложение — это call(env) → [статус, заголовки, тело]. Middleware оборачивает его и видит каждый запрос и ответ — это место для сквозной логики, а не для бизнес-правил."
+}

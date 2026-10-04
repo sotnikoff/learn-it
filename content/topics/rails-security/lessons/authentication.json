@@ -1,0 +1,36 @@
+{
+  "title": "Аутентификация",
+  "term": "Генератор аутентификации Rails 8 и has_secure_password",
+  "analogy": "вход по паролю без сторонних гемов",
+  "plain": "В Rails 8 есть генератор аутентификации: одна команда создаёт пользователя с паролем, сессии в базе, вход, выход, сброс пароля по почте и ограничение частоты попыток. Это обычный код в вашем приложении — его можно читать и менять. Регистрацию генератор не создаёт: её пишут под свою задачу.",
+  "sections": [
+    {
+      "heading": "Что генерируется",
+      "paragraphs": [
+        "bin/rails generate authentication создаёт модели User (email_address, password_digest) и Session (пользователь, IP, user agent), контроллеры SessionsController и PasswordsController, мейлер для сброса пароля и concern Authentication, подключённый в ApplicationController. Concern требует входа на всех страницах, а открытые экшены отмечают явно."
+      ],
+      "code": "bin/rails generate authentication\nbin/rails db:migrate\n\nclass PagesController < ApplicationController\n  allow_unauthenticated_access only: %i[home pricing]\nend\n\nCurrent.user          # текущий пользователь"
+    },
+    {
+      "heading": "Пароли",
+      "paragraphs": [
+        "has_secure_password хранит не пароль, а его хеш bcrypt в password_digest, добавляет password и password_confirmation и метод authenticate. User.authenticate_by(email_address:, password:) ищет пользователя и проверяет пароль за одинаковое время, есть пользователь или нет, — чтобы по времени ответа нельзя было понять, зарегистрирован ли email. В Rails 8 has_secure_password также даёт токены для сброса пароля, которые перестают работать после смены пароля."
+      ]
+    },
+    {
+      "heading": "Сессии в базе",
+      "paragraphs": [
+        "После входа создаётся запись Session, а в подписанную cookie кладётся её id. Каждый запрос находит сессию и пользователя. Выход удаляет запись, и cookie становится бесполезной — в отличие от хранения user_id прямо в cookie. Это же позволяет показать список активных сессий и «выйти на всех устройствах»."
+      ],
+      "code": "class SessionsController < ApplicationController\n  allow_unauthenticated_access only: %i[new create]\n  rate_limit to: 10, within: 3.minutes, only: :create,\n             with: -> { redirect_to new_session_url, alert: \"Попробуйте позже\" }\n\n  def create\n    if user = User.authenticate_by(params.permit(:email_address, :password))\n      start_new_session_for user\n      redirect_to after_authentication_url\n    else\n      redirect_to new_session_path, alert: \"Неверный email или пароль\"\n    end\n  end\nend"
+    },
+    {
+      "heading": "Чего нет",
+      "paragraphs": [
+        "Регистрации, подтверждения email, входа через Google и двухфакторной аутентификации генератор не делает. Их добавляют сами (OmniAuth для входа через сторонние сервисы, rotp для одноразовых кодов) или берут готовые решения вроде Devise и Rodauth, если нужен полный набор сразу."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "Генератор Rails 8 даёт вход, выход, сброс пароля, сессии в базе и rate_limit. has_secure_password хранит хеш bcrypt, а регистрацию вы пишете сами."
+}

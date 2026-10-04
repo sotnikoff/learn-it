@@ -1,0 +1,13 @@
+{
+  "title": "Маршруты и контроллеры",
+  "analogy": "как URL превращается в вызов метода",
+  "summary": "Как устроены маршруты и REST в Rails, что умеет контроллер, как защищаться от массового присваивания, что такое сессия и flash и как работает слой Rack с middleware, через который проходит каждый запрос.",
+  "lessons": [
+    "routes-and-resources",
+    "controllers",
+    "strong-parameters",
+    "filters-and-concerns",
+    "sessions-cookies-flash",
+    "rack-and-middleware"
+  ]
+}

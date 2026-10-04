@@ -1,0 +1,37 @@
+{
+  "title": "Индексы и explain",
+  "term": "Индексы под запросы и план выполнения",
+  "analogy": "предметный указатель в конце книги",
+  "plain": "Индекс позволяет базе найти строки, не читая всю таблицу. Индексы нужны на колонки, по которым ищут, сортируют и соединяют, — прежде всего на внешние ключи. Проверить, использует ли запрос индекс, можно методом explain прямо из Rails.",
+  "sections": [
+    {
+      "heading": "Что индексировать",
+      "paragraphs": [
+        "Внешние ключи (user_id) — почти всегда: по ним идут JOIN и загрузка связей. t.references создаёт такой индекс сам, а add_column :orders, :user_id, :bigint — нет, и это частая причина медленных страниц. Колонки в where часто используемых запросов. Составной индекс [:user_id, :created_at] обслуживает запрос «заказы пользователя по дате» целиком — и фильтр, и сортировку.",
+        "Порядок колонок в составном индексе важен: индекс [:user_id, :created_at] помогает запросу по user_id, но не помогает запросу только по created_at."
+      ]
+    },
+    {
+      "heading": "explain",
+      "paragraphs": [
+        "Relation#explain показывает план выполнения запроса. Seq Scan на большой таблице — полное чтение, нужен индекс. Index Scan — индекс используется. С Rails 7.1 можно передать опции PostgreSQL: explain(:analyze) выполнит запрос и покажет реальное время каждого шага."
+      ],
+      "code": "Order.where(user_id: 42).order(created_at: :desc).limit(20).explain(:analyze)\n# Limit  (actual time=0.031..0.045 rows=20)\n#   ->  Index Scan Backward using index_orders_on_user_id_and_created_at on orders\n#         Index Cond: (user_id = 42)"
+    },
+    {
+      "heading": "Индексы не бесплатны",
+      "paragraphs": [
+        "Каждый индекс замедляет INSERT и UPDATE и занимает место на диске и в памяти. Индекс, которым никто не пользуется, — чистая потеря. В PostgreSQL статистику использования показывает pg_stat_user_indexes. Частичный индекс (where: \"deleted_at IS NULL\") покрывает только нужные строки и занимает меньше места."
+      ],
+      "code": "add_index :orders, [:user_id, :created_at]\nadd_index :users, :email, unique: true\nadd_index :jobs, :run_at, where: \"finished_at IS NULL\"   # частичный"
+    },
+    {
+      "heading": "Где искать медленные запросы",
+      "paragraphs": [
+        "В логе разработки — время каждого запроса. В продакшене — расширение pg_stat_statements в PostgreSQL (топ запросов по суммарному времени) и APM-сервисы. Rails также умеет подписывать SQL комментарием с контроллером и экшеном (config.active_record.query_log_tags_enabled = true), и в логах базы сразу видно, откуда пришёл тяжёлый запрос."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "Индексируйте внешние ключи и колонки частых условий, составные — в правильном порядке. explain(:analyze) показывает, используется ли индекс."
+}

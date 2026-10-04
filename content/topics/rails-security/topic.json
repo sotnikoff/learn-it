@@ -1,0 +1,11 @@
+{
+  "title": "Безопасность Rails",
+  "analogy": "что защищено из коробки и где дыры делаете вы",
+  "summary": "Что Rails защищает сам — CSRF, XSS, SQL-инъекции, — как устроены аутентификация из генератора Rails 8 и проверка прав, и какие ошибки чаще всего открывают уязвимости в реальных приложениях.",
+  "lessons": [
+    "built-in-protection",
+    "authentication",
+    "authorization",
+    "common-mistakes"
+  ]
+}

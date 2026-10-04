@@ -1,0 +1,29 @@
+{
+  "title": "Action Cable",
+  "term": "WebSocket: соединение, каналы и Solid Cable",
+  "analogy": "открытая линия связи от сервера к странице",
+  "plain": "Action Cable держит WebSocket-соединения с браузерами, чтобы сервер мог сам отправлять обновления: новые сообщения в чате, статус заказа, уведомления. Чаще всего напрямую с ним не работают — Turbo Streams делают рассылку через него. Сообщения между процессами Rails передаёт адаптер: в Rails 8 это Solid Cable в базе данных.",
+  "sections": [
+    {
+      "heading": "Соединение и каналы",
+      "paragraphs": [
+        "Connection — одно WebSocket-соединение на вкладку браузера. В нём определяют, кто пользователь (обычно по cookie сессии). Channel — тема подписки внутри соединения: чат конкретной комнаты, уведомления пользователя. Подписавшись, канал вызывает stream_from или stream_for — «слушаю такую-то трансляцию»."
+      ],
+      "code": "# app/channels/application_cable/connection.rb\nmodule ApplicationCable\n  class Connection < ActionCable::Connection::Base\n    identified_by :current_user\n\n    def connect\n      self.current_user = User.find_by(id: cookies.encrypted[:user_id]) ||\n                          reject_unauthorized_connection\n    end\n  end\nend\n\nclass NotificationsChannel < ApplicationCable::Channel\n  def subscribed = stream_for current_user\nend\n\nNotificationsChannel.broadcast_to(user, { text: \"Заказ отправлен\" })"
+    },
+    {
+      "heading": "Адаптер",
+      "paragraphs": [
+        "Пользователь подключён к одному процессу Puma, а событие произошло в другом — например, в фоновой задаче на другом сервере. Адаптер — общий канал между процессами: broadcast записывает сообщение туда, и каждый процесс отправляет его своим подписчикам. Solid Cable хранит сообщения в таблице базы и опрашивает её (по умолчанию раз в 0,1 секунды). Альтернатива — Redis pub/sub."
+      ]
+    },
+    {
+      "heading": "Масштаб",
+      "paragraphs": [
+        "Каждое WebSocket-соединение — открытый сокет и немного памяти в процессе Ruby. Тысячи соединений Action Cable держит, десятки тысяч — уже тяжело. Для больших нагрузок используют AnyCable: соединения держит отдельный сервер на Go, а Rails обрабатывает только логику каналов."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "Action Cable — WebSocket в Rails: соединение, каналы и рассылка через адаптер. Чаще всего вы используете его через Turbo Streams, а не напрямую."
+}

@@ -1,0 +1,36 @@
+{
+  "title": "Active Record изнутри",
+  "term": "Схема, Attributes API, dirty tracking и путь до SQL",
+  "analogy": "что происходит между вызовом метода и строкой в таблице",
+  "plain": "При первом обращении к модели Active Record читает схему таблицы и определяет атрибуты с типами. Значения из базы хранятся как пришли и приводятся к Ruby-типам при чтении. Изменения отслеживаются, и UPDATE содержит только изменённые колонки. Запрос строится как дерево Arel, превращается в SQL для конкретной базы, выполняется адаптером, а строки результата становятся объектами модели.",
+  "sections": [
+    {
+      "heading": "Схема и атрибуты",
+      "paragraphs": [
+        "Колонки таблицы Rails узнаёт запросом к базе при первом использовании модели. Чтобы не делать этого в каждом процессе при старте, кеш схемы можно сохранить в файл (db:schema:cache:dump). Каждой колонке соответствует тип из Attributes API: он умеет приводить ввод из формы (cast), читать из базы (deserialize) и записывать в базу (serialize). Можно объявить свои атрибуты и типы — в том числе атрибуты без колонки в базе."
+      ],
+      "code": "class MoneyType < ActiveRecord::Type::Value\n  def cast(value) = value.is_a?(Money) ? value : Money.from_cents(value.to_i)\n  def serialize(value) = value&.cents\nend\nActiveRecord::Type.register(:money, MoneyType)\n\nclass Product < ApplicationRecord\n  attribute :price_cents, :money\n  attribute :featured, :boolean, default: false   # атрибут без колонки\nend"
+    },
+    {
+      "heading": "Отслеживание изменений",
+      "paragraphs": [
+        "Модель помнит исходные значения атрибутов. changed?, changes, attribute_was показывают, что изменено до сохранения; после save — saved_changes и saved_change_to_attribute?. При UPDATE Rails пишет только изменённые колонки. Тонкость: изменение на месте (user.name << \"!\") тоже отслеживается — Rails сравнивает значения, но для сложных структур (JSON) это сравнение стоит времени."
+      ],
+      "code": "user.email = \"new@example.com\"\nuser.changes                    # => {\"email\" => [\"old@example.com\", \"new@example.com\"]}\nuser.save\nuser.saved_change_to_email?     # => true — удобно в after_commit"
+    },
+    {
+      "heading": "От Relation до объектов",
+      "paragraphs": [
+        "Цепочка where/order/joins накапливает части запроса в Relation. При загрузке Relation строит дерево Arel, визитор адаптера (PostgreSQL, MySQL, SQLite) превращает его в SQL с плейсхолдерами для значений, адаптер выполняет запрос — часто как подготовленный (prepared statement), чтобы база не разбирала одинаковый SQL заново. Результат — строки, из которых instantiate создаёт объекты модели. Для каждой строки создаётся объект с набором атрибутов — поэтому загрузка десятков тысяч записей дорогая, и pluck выигрывает в разы."
+      ]
+    },
+    {
+      "heading": "Кеш запросов",
+      "paragraphs": [
+        "Внутри одного запроса или задачи Active Record кеширует результаты SELECT: одинаковый SQL второй раз не уйдёт в базу. Любая запись (INSERT, UPDATE, DELETE) очищает этот кеш. Это прячет часть N+1 в логах (строки CACHE), но не освобождает от создания объектов — а значит, от затрат памяти и времени."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "Атрибуты берутся из схемы и приводятся через типы Attributes API, UPDATE пишет только изменённое, а запрос проходит путь Relation → Arel → SQL → адаптер → объекты."
+}

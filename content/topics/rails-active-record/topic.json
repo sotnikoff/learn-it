@@ -1,0 +1,14 @@
+{
+  "title": "Active Record: основы",
+  "analogy": "строка таблицы, которая умеет себя сохранять",
+  "summary": "Как модель связана с таблицей, как работают миграции, почему запросы ленивые, как устроены связи, валидации и коллбэки, и как не потерять данные с помощью транзакций и блокировок.",
+  "lessons": [
+    "models-and-conventions",
+    "migrations-and-schema",
+    "querying",
+    "associations",
+    "validations",
+    "callbacks",
+    "transactions-and-locking"
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "title": "Проблема N+1",
+  "term": "N+1 запросы, includes, preload, eager_load и strict_loading",
+  "analogy": "ходить в магазин за каждым продуктом отдельно",
+  "plain": "N+1 — один запрос за списком и ещё N запросов за связанными данными каждого элемента. На 50 заказах это 51 запрос вместо двух. Лечится предварительной загрузкой связей: includes, preload или eager_load. strict_loading заставляет Rails ругаться, если вы забыли это сделать.",
+  "sections": [
+    {
+      "heading": "Магазин",
+      "paragraphs": [
+        "Нужно купить продукты по списку из двадцати пунктов. Можно сходить в магазин двадцать раз — каждый раз за одним продуктом. А можно один раз, со всем списком. Каждый поход — это время на дорогу, даже если сам продукт берётся за секунду.",
+        "С базой так же: каждый запрос — это поездка по сети и разбор SQL. 50 маленьких запросов по 1 мс — это 50 мс, а один запрос с IN (...) — 2 мс."
+      ]
+    },
+    {
+      "heading": "Как выглядит",
+      "paragraphs": [
+        "Код выглядит невинно: перебор заказов и имя пользователя в каждом. Связь order.user — ленивая, и каждый вызов идёт в базу. В логе это видно как длинная колонка одинаковых SELECT, отличающихся только id."
+      ],
+      "code": "# Контроллер\n@orders = Order.order(created_at: :desc).limit(50)\n\n# Шаблон\n<% @orders.each do |order| %>\n  <%= order.user.name %>          <!-- запрос на каждой итерации -->\n<% end %>\n\n# Лог:\n# Order Load  SELECT \"orders\".* FROM \"orders\" ORDER BY ... LIMIT 50\n# User Load   SELECT \"users\".* FROM \"users\" WHERE \"users\".\"id\" = 7 LIMIT 1\n# User Load   SELECT \"users\".* FROM \"users\" WHERE \"users\".\"id\" = 12 LIMIT 1\n# ... ещё 48 раз"
+    },
+    {
+      "heading": "Три способа загрузить заранее",
+      "paragraphs": [
+        "preload делает отдельный запрос на каждую связь: SELECT users WHERE id IN (...). Просто и предсказуемо. eager_load делает один запрос с LEFT OUTER JOIN — нужен, когда по связанной таблице фильтруют или сортируют. includes выбирает сам: обычно как preload, но переключается на eager_load, если в where или order есть ссылка на таблицу связи (через references или условие-хеш по связи)."
+      ],
+      "code": "Order.preload(:user).limit(50)                       # 2 запроса\nOrder.eager_load(:user).where(users: { vip: true })  # 1 запрос с JOIN\nOrder.includes(:user, line_items: :product)          # вложенные связи"
+    },
+    {
+      "heading": "strict_loading",
+      "paragraphs": [
+        "strict_loading помечает записи так, что ленивая загрузка связи бросает ActiveRecord::StrictLoadingViolationError. Включать можно для запроса (Order.strict_loading), для связи (has_many :items, strict_loading: true) или для всего приложения (config.active_record.strict_loading_by_default = true). Мягкий вариант — только писать в лог: config.active_record.action_on_strict_loading_violation = :log. Для поиска N+1 в существующем проекте также используют гем Bullet и prosopite."
+      ],
+      "code": "orders = Order.strict_loading.limit(50)\norders.first.user     # StrictLoadingViolationError: забыли preload(:user)"
+    }
+  ],
+  "mapping": [
+    {
+      "tech": "N+1",
+      "real": "Двадцать походов в магазин за двадцатью продуктами"
+    },
+    {
+      "tech": "preload",
+      "real": "Один поход со списком — отдельно в каждый отдел"
+    },
+    {
+      "tech": "eager_load",
+      "real": "Взять всё одной корзиной на кассе"
+    },
+    {
+      "tech": "strict_loading",
+      "real": "Запрет выходить из дома без списка"
+    }
+  ],
+  "caveat": "В магазине лишнее не купишь случайно. includes на связи с тысячами записей загрузит их все в память, даже если вы покажете только три. Предзагрузка лечит N+1, но может создать другую проблему — огромный запрос и расход памяти.",
+  "takeaway": "N+1 — запрос в цикле. Загружайте связи заранее через preload или includes, а strict_loading поможет не забыть."
+}

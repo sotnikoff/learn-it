@@ -1,0 +1,30 @@
+{
+  "title": "Request- и системные тесты",
+  "term": "ActionDispatch::IntegrationTest и системные тесты с Capybara",
+  "analogy": "проверить ответ сервера или пройти путь пользователя",
+  "plain": "Request-тест отправляет запрос в приложение без браузера и проверяет статус, редирект, тело и изменения в базе. Системный тест запускает настоящий браузер (обычно Chrome без окна) через Capybara и проходит сценарий как пользователь: заполнить поле, нажать кнопку, увидеть текст. Он проверяет и JavaScript.",
+  "sections": [
+    {
+      "heading": "Request-тест",
+      "paragraphs": [
+        "Быстрый (миллисекунды), проходит весь стек Rails — роутер, middleware, контроллер, шаблон. Хорош для проверки прав доступа, обработки ошибок, API и редиректов."
+      ],
+      "code": "class OrdersTest < ActionDispatch::IntegrationTest\n  setup { sign_in_as users(:anna) }\n\n  test \"создание заказа\" do\n    assert_difference -> { Order.count }, +1 do\n      post orders_path, params: { order: { product_id: products(:kettle).id } }\n    end\n    assert_redirected_to order_path(Order.last)\n  end\n\n  test \"чужой заказ недоступен\" do\n    get order_path(orders(:boris_order))\n    assert_response :not_found\n  end\nend"
+    },
+    {
+      "heading": "Системный тест",
+      "paragraphs": [
+        "Запускает браузер и сервер приложения в отдельном потоке. Проверяет то, что видит пользователь, включая Turbo, Stimulus и JavaScript. Цена — скорость (секунды на тест) и нестабильность: тест может упасть из-за того, что элемент ещё не появился. Capybara умеет ждать появления элемента (assert_text ждёт до таймаута), поэтому sleep в системных тестах не пишут."
+      ],
+      "code": "class CheckoutTest < ApplicationSystemTestCase\n  driven_by :selenium, using: :headless_chrome\n\n  test \"покупка\" do\n    sign_in_as users(:anna)\n    visit product_path(products(:kettle))\n    click_on \"В корзину\"\n    click_on \"Оформить\"\n    fill_in \"Адрес\", with: \"Москва, Тверская, 1\"\n    click_on \"Подтвердить\"\n    assert_text \"Заказ оформлен\"\n  end\nend"
+    },
+    {
+      "heading": "Внешние сервисы",
+      "paragraphs": [
+        "Тесты не должны ходить в настоящие внешние API: это медленно, нестабильно и иногда стоит денег. WebMock запрещает реальные HTTP-запросы и позволяет описать ответы. VCR записывает настоящий ответ один раз и потом проигрывает его. Ещё лучше — обернуть внешний сервис своим классом-адаптером и подменять в тестах его, а не HTTP."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "Request-тесты — быстрые проверки эндпоинтов и прав. Системные тесты — медленные, но проверяют реальный путь пользователя с JavaScript; их немного."
+}

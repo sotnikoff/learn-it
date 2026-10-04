@@ -1,0 +1,54 @@
+{
+  "title": "Turbo",
+  "term": "Turbo Drive, Frames и Streams",
+  "analogy": "заменить одну витрину, не перестраивая весь магазин",
+  "plain": "Turbo делает приложение с серверным HTML похожим на одностраничное. Drive перехватывает переходы и подменяет страницу без полной перезагрузки. Frames обновляют только часть страницы. Streams отправляют команды «добавь, замени, удали этот элемент» — в ответ на действие или через WebSocket всем, кто смотрит.",
+  "sections": [
+    {
+      "heading": "Витрины",
+      "paragraphs": [
+        "В магазине поменялся ассортимент на одной витрине. Можно закрыть магазин и перестроить всё заново — это обычная перезагрузка страницы. Можно оставить здание и поменять всё внутри, не трогая вывеску и проводку, — это Turbo Drive. Можно поменять одну витрину — это Turbo Frame. А можно разослать по всем филиалам записку «на третью полку добавить новый товар» — это Turbo Stream."
+      ]
+    },
+    {
+      "heading": "Turbo Drive",
+      "paragraphs": [
+        "Включён по умолчанию. Клик по ссылке или отправка формы превращается в fetch-запрос, а из ответа Turbo заменяет body и объединяет head. CSS и JavaScript не загружаются заново, состояние браузера сохраняется — переходы ощущаются мгновенными. С Turbo 8 можно включить морфинг (turbo_refreshes_with method: :morph): страница не заменяется, а аккуратно сравнивается и обновляется точечно, сохраняя прокрутку и фокус."
+      ]
+    },
+    {
+      "heading": "Turbo Frames",
+      "paragraphs": [
+        "turbo_frame_tag оборачивает часть страницы. Ссылки и формы внутри фрейма грузят новую страницу, но Turbo берёт из ответа только фрейм с тем же id и подменяет его. Так делают редактирование «на месте», вкладки, подгрузку частей страницы (loading: :lazy). Сервер при этом отдаёт обычный полный HTML."
+      ],
+      "code": "<!-- show.html.erb -->\n<%= turbo_frame_tag dom_id(@article, :title) do %>\n  <h1><%= @article.title %></h1>\n  <%= link_to \"Изменить\", edit_article_path(@article) %>\n<% end %>\n\n<!-- edit.html.erb: в ответе ищется тот же фрейм -->\n<%= turbo_frame_tag dom_id(@article, :title) do %>\n  <%= form_with model: @article do |f| %> ... <% end %>\n<% end %>"
+    },
+    {
+      "heading": "Turbo Streams",
+      "paragraphs": [
+        "Stream — это HTML-тег с командой: append, prepend, replace, update, remove, before, after, refresh — и целью по id. Контроллер может ответить форматом turbo_stream после отправки формы. А модель может рассылать изменения по WebSocket всем подписанным страницам — через broadcasts в модели и turbo_stream_from в шаблоне. Так строят чаты, ленты и живые дашборды без единой строки JavaScript."
+      ],
+      "code": "# контроллер\ndef create\n  @comment = @article.comments.create!(comment_params)\n  respond_to do |format|\n    format.turbo_stream    # create.turbo_stream.erb\n    format.html { redirect_to @article }\n  end\nend\n\n<!-- create.turbo_stream.erb -->\n<%= turbo_stream.append \"comments\", @comment %>\n<%= turbo_stream.update \"comments_count\", @article.comments.count %>\n\n# рассылка всем зрителям статьи\nclass Comment < ApplicationRecord\n  belongs_to :article\n  broadcasts_to :article\nend\n<!-- в шаблоне статьи -->\n<%= turbo_stream_from @article %>"
+    }
+  ],
+  "mapping": [
+    {
+      "tech": "Полная перезагрузка",
+      "real": "Закрыть магазин и перестроить"
+    },
+    {
+      "tech": "Turbo Drive",
+      "real": "Сменить всё внутри, не трогая здание"
+    },
+    {
+      "tech": "Turbo Frame",
+      "real": "Поменять одну витрину"
+    },
+    {
+      "tech": "Turbo Stream",
+      "real": "Записка во все филиалы: что и где поменять"
+    }
+  ],
+  "caveat": "Витрину в магазине меняют, не замечая соседних. Turbo Drive сохраняет JavaScript между страницами, поэтому скрипты, которые «запускаются при загрузке страницы», срабатывают только один раз. Код инициализации пишут в Stimulus-контроллерах, которые подключаются к элементам, когда те появляются.",
+  "takeaway": "Drive ускоряет переходы, Frames обновляют часть страницы, Streams рассылают точечные изменения. Всё это — HTML с сервера, почти без своего JavaScript."
+}

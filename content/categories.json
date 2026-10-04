@@ -83,5 +83,11 @@
     "title": "Язык Ruby",
     "description": "Как устроен Ruby изнутри: объекты, интерпретатор, память и потоки — в сравнении с Python и JavaScript.",
     "topics": ["ruby-basics", "ruby-object-model", "ruby-interpreter", "ruby-memory", "ruby-concurrency", "ruby-metaprogramming", "ruby-ecosystem"]
+  },
+  {
+    "slug": "rails",
+    "title": "Ruby on Rails",
+    "description": "Фреймворк, на котором держится большая часть Ruby-мира: от первого контроллера до архитектуры больших приложений.",
+    "topics": ["rails-basics", "rails-routing-controllers", "rails-active-record", "rails-active-record-production", "rails-views-frontend", "rails-background", "rails-caching", "rails-security", "rails-testing", "rails-architecture", "rails-internals"]
   }
 ]

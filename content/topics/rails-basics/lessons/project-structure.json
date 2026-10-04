@@ -1,0 +1,36 @@
+{
+  "title": "Структура проекта",
+  "term": "Каталоги Rails-приложения и соглашения об именах",
+  "analogy": "у каждого файла есть своё место",
+  "plain": "Rails-проект всегда устроен одинаково: код приложения — в app/, настройки — в config/, база — в db/, служебные скрипты — в bin/. Имена файлов и классов связаны жёстким соглашением, и на нём держится автозагрузка: require в коде приложения не пишут.",
+  "sections": [
+    {
+      "heading": "app/",
+      "paragraphs": [
+        "models, controllers, views — три буквы MVC. helpers — методы для шаблонов. jobs — фоновые задачи. mailers — письма. channels — WebSocket. javascript и assets — фронтенд. Любой новый подкаталог app/ (например, app/services или app/queries) Rails подхватит автоматически — так проекты добавляют свои слои."
+      ]
+    },
+    {
+      "heading": "config/ и db/",
+      "paragraphs": [
+        "config/routes.rb — маршруты. config/database.yml — подключение к базе. config/application.rb — общие настройки, config/environments/*.rb — настройки окружений. config/initializers/ — код, который выполняется при старте. config/credentials.yml.enc — зашифрованные секреты. config/deploy.yml — деплой через Kamal.",
+        "db/migrate — миграции, db/schema.rb — текущая схема базы (генерируется, руками не правят), db/seeds.rb — начальные данные."
+      ]
+    },
+    {
+      "heading": "Остальное",
+      "paragraphs": [
+        "bin/ — команды проекта: bin/rails, bin/dev (запуск всего для разработки), bin/setup (подготовка проекта с нуля), bin/ci (локальный CI в Rails 8.1). lib/ — код, не относящийся к приложению напрямую. test/ или spec/ — тесты. public/ — статические файлы, которые отдаются как есть (страницы 404 и 500). Gemfile и Gemfile.lock — зависимости."
+      ]
+    },
+    {
+      "heading": "Имена решают всё",
+      "paragraphs": [
+        "Класс Admin::ReportsController обязан лежать в app/controllers/admin/reports_controller.rb. Модель LineItem — в app/models/line_item.rb и работать с таблицей line_items. Таблица — во множественном числе, модель — в единственном, файлы — snake_case. Ошибся в имени — получишь NameError: uninitialized constant. Это первое, что стоит проверить при такой ошибке."
+      ],
+      "code": "Класс                         Файл                                         Таблица\nUser                          app/models/user.rb                           users\nLineItem                      app/models/line_item.rb                      line_items\nAdmin::ReportsController      app/controllers/admin/reports_controller.rb  —\nSendInvoiceJob                app/jobs/send_invoice_job.rb                 —"
+    }
+  ],
+  "mapping": [],
+  "takeaway": "app/ — код, config/ — настройки, db/ — база, bin/ — команды. Имя класса однозначно задаёт путь к файлу и имя таблицы."
+}

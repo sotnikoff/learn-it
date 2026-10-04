@@ -1,0 +1,35 @@
+{
+  "title": "Rails как API",
+  "term": "API-режим, JSON-ответы и версии API",
+  "analogy": "тот же Rails, только без представлений",
+  "plain": "Если фронтенд — отдельное приложение (React, мобильное), Rails работает как JSON API. rails new --api создаёт приложение без шаблонов, ассетов, cookies и сессий: контроллеры наследуются от ActionController::API, а middleware меньше. Остальное — модели, задачи, почта — то же самое.",
+  "sections": [
+    {
+      "heading": "Ответы",
+      "paragraphs": [
+        "render json: вызывает as_json у объекта. Для простых случаев хватает as_json(only: [...]), но скоро понадобится контроль над форматом: вложенные объекты, вычисляемые поля, разные представления для списка и детальной страницы. Тогда используют Jbuilder (шаблоны .json.jbuilder), гемы-сериализаторы (Alba, Blueprinter) или простые Ruby-объекты с методом as_json."
+      ],
+      "code": "class Api::V1::OrdersController < ActionController::API\n  def show\n    order = Current.account.orders.find(params[:id])\n    render json: OrderSerializer.new(order)\n  end\nend\n\nclass OrderSerializer\n  def initialize(order) = @order = order\n\n  def as_json(*)\n    {\n      id: @order.id,\n      status: @order.status,\n      total: @order.total.to_s,          # деньги — строкой, не float\n      items: @order.line_items.map { { sku: it.sku, quantity: it.quantity } }\n    }\n  end\nend"
+    },
+    {
+      "heading": "Ошибки и статусы",
+      "paragraphs": [
+        "API должен отвечать предсказуемо: 422 с перечнем ошибок валидации, 404 для отсутствующих записей, 401 и 403 для доступа. Удобно сделать это в одном месте — rescue_from в базовом контроллере API с единым форматом тела ошибки."
+      ]
+    },
+    {
+      "heading": "Аутентификация",
+      "paragraphs": [
+        "Без cookies нужен другой способ: токен в заголовке Authorization. Rails даёт authenticate_with_http_token и has_secure_token для генерации токенов. Если фронтенд живёт на том же домене, проще оставить cookies и сессии — тогда CSRF-защиту настраивают отдельно. Для разных доменов нужен CORS (гем rack-cors)."
+      ]
+    },
+    {
+      "heading": "Версии",
+      "paragraphs": [
+        "Мобильное приложение нельзя обновить у всех пользователей сразу, поэтому несовместимые изменения API выпускают новой версией: namespace :api { namespace :v1 { ... } } и параллельно v2. Совместимые изменения (новое поле в ответе) делают без новой версии."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "API-режим — Rails без представлений. Формат ответа задавайте сериализаторами, ошибки отдавайте единообразно, несовместимые изменения выпускайте новой версией."
+}

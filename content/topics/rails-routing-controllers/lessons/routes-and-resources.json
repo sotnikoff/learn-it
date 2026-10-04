@@ -1,0 +1,37 @@
+{
+  "title": "Маршруты и ресурсы",
+  "term": "config/routes.rb, REST и resources",
+  "analogy": "одна строка — семь стандартных адресов",
+  "plain": "Маршрут связывает HTTP-метод и путь с экшеном контроллера. Rails построен вокруг REST: приложение — набор ресурсов (статьи, заказы), с которыми делают стандартные действия. Одна строка resources :articles создаёт семь маршрутов для просмотра, создания, изменения и удаления.",
+  "sections": [
+    {
+      "heading": "resources",
+      "paragraphs": [
+        "Семь стандартных экшенов: index (список), show (одна запись), new (форма создания), create (создать), edit (форма изменения), update (изменить), destroy (удалить). Вместе с маршрутами Rails создаёт хелперы путей: articles_path, article_path(@article), new_article_path, edit_article_path(@article). Пути в коде никогда не пишут строкой — только хелперами."
+      ],
+      "code": "# config/routes.rb\nRails.application.routes.draw do\n  root \"articles#index\"\n  resources :articles\n  resources :articles, only: %i[index show]   # если нужны не все\n  resource :profile                           # единственный ресурс: без id\nend\n\n# GET    /articles           articles#index\n# GET    /articles/new       articles#new\n# POST   /articles           articles#create\n# GET    /articles/:id       articles#show\n# GET    /articles/:id/edit  articles#edit\n# PATCH  /articles/:id       articles#update\n# DELETE /articles/:id       articles#destroy"
+    },
+    {
+      "heading": "Вложенные ресурсы",
+      "paragraphs": [
+        "Комментарии принадлежат статье, поэтому их маршруты вкладывают: /articles/5/comments. В контроллере появляется params[:article_id]. Вкладывать глубже одного уровня не принято — адреса становятся громоздкими. Опция shallow: true вкладывает только там, где нужен родитель (список и создание), а остальные экшены оставляет короткими."
+      ],
+      "code": "resources :articles do\n  resources :comments, shallow: true\nend\n# GET  /articles/5/comments   comments#index   (params[:article_id])\n# POST /articles/5/comments   comments#create\n# GET  /comments/9            comments#show    — коротко"
+    },
+    {
+      "heading": "Свои действия",
+      "paragraphs": [
+        "Если стандартных семи не хватает, добавляют member (действие над одной записью, с id) и collection (над всей коллекцией). Но частая хорошая практика — не плодить экшены, а выделить новый ресурс: вместо POST /orders/5/cancel завести resource :cancellation внутри заказа. Тогда контроллеры остаются маленькими и стандартными."
+      ],
+      "code": "resources :orders do\n  member     { post :refund }       # POST /orders/:id/refund\n  collection { get :export }        # GET  /orders/export\n  resource :cancellation, only: :create   # POST /orders/:id/cancellation\nend\n\nnamespace :admin do                 # /admin/users → Admin::UsersController\n  resources :users\nend"
+    },
+    {
+      "heading": "Как посмотреть все маршруты",
+      "paragraphs": [
+        "bin/rails routes выводит таблицу всех маршрутов с хелперами, а с флагом -g фильтрует по слову. В development то же самое показывает страница /rails/info/routes. Маршруты сверяются сверху вниз, первый подходящий побеждает — поэтому общие маршруты вроде get \"*path\" ставят в конец."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "resources даёт семь REST-маршрутов и хелперы путей. Вместо нестандартных экшенов чаще выгоднее завести новый маленький ресурс."
+}

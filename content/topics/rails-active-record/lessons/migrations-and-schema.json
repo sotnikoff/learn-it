@@ -1,0 +1,36 @@
+{
+  "title": "Миграции и схема",
+  "term": "Миграции, schema.rb и structure.sql",
+  "analogy": "история изменений базы, записанная кодом",
+  "plain": "Миграция — Ruby-файл, который описывает одно изменение схемы базы: создать таблицу, добавить колонку, индекс. Миграции применяются по порядку и запоминаются в таблице schema_migrations. Итоговое состояние Rails записывает в db/schema.rb — по нему создают базу с нуля.",
+  "sections": [
+    {
+      "heading": "Как выглядит миграция",
+      "paragraphs": [
+        "Метод change описывает изменение так, чтобы Rails сам понял, как его откатить: обратное к create_table — drop_table, к add_column — remove_column. Если откат неочевиден (например, удаление колонки — непонятно, какого она была типа), используют up и down или указывают тип явно."
+      ],
+      "code": "class CreateOrders < ActiveRecord::Migration[8.1]\n  def change\n    create_table :orders do |t|\n      t.references :user, null: false, foreign_key: true   # user_id + индекс + внешний ключ\n      t.string :status, null: false, default: \"pending\"\n      t.decimal :total, precision: 10, scale: 2, null: false\n      t.timestamps\n    end\n    add_index :orders, [:user_id, :created_at]\n  end\nend"
+    },
+    {
+      "heading": "Применение и откат",
+      "paragraphs": [
+        "bin/rails db:migrate применяет все новые миграции и обновляет schema.rb. db:rollback откатывает последнюю, db:migrate:status показывает, какие применены. Номер в имени файла — время создания: так миграции разных разработчиков выстраиваются в один порядок.",
+        "Правило: применённую в продакшене миграцию не редактируют. Нужна правка — новая миграция. Иначе у разных людей и на сервере окажутся разные схемы."
+      ]
+    },
+    {
+      "heading": "schema.rb и structure.sql",
+      "paragraphs": [
+        "db/schema.rb — схема на Ruby-DSL, не зависящая от СУБД. Её коммитят, и новая база создаётся из неё (db:schema:load), а не прогоном сотен миграций. Но schema.rb не умеет выражать всё: триггеры, представления, специфичные для PostgreSQL типы и функции. Тогда переключаются на db/structure.sql — дамп схемы на SQL (config.active_record.schema_format = :sql)."
+      ]
+    },
+    {
+      "heading": "Ограничения — в базе",
+      "paragraphs": [
+        "null: false, foreign_key: true, уникальные индексы и default задают правила на уровне базы. Валидации в модели можно обойти (update_column, insert_all, другой сервис с доступом к базе, гонка двух запросов), а ограничения базы — нет. Хорошая практика — дублировать важные правила: валидация для понятных сообщений об ошибках, ограничение в базе — для гарантии."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "Миграции — история изменений схемы, schema.rb — её итог. Применённые миграции не правят, а важные правила дублируют ограничениями в базе."
+}

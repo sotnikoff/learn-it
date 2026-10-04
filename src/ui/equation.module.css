@@ -6,6 +6,7 @@
   text-wrap: balance;
   /* Длинные слова («Метапрограммирование») не выталкивают страницу вбок на узком экране. */
   hyphens: auto;
+  hyphenate-limit-chars: 14 6 6;
   overflow-wrap: break-word;
 }
 

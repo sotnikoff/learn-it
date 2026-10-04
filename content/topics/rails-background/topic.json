@@ -1,0 +1,13 @@
+{
+  "title": "Фоновые задачи, почта, файлы и WebSocket",
+  "analogy": "всё, что не должно ждать ответа",
+  "summary": "Как вынести долгую работу из запроса в фоновые задачи, как устроена очередь Solid Queue в базе данных, как сделать задачи надёжными, а также как Rails отправляет письма, хранит файлы и держит WebSocket-соединения.",
+  "lessons": [
+    "active-job",
+    "solid-queue",
+    "reliable-jobs",
+    "action-mailer",
+    "active-storage",
+    "action-cable"
+  ]
+}

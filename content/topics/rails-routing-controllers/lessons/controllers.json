@@ -1,0 +1,38 @@
+{
+  "title": "Контроллеры",
+  "term": "Экшены, params, render и redirect_to",
+  "analogy": "тонкий диспетчер между запросом и моделями",
+  "plain": "Контроллер — класс, наследник ApplicationController. Его публичные методы — экшены. Экшен читает params, работает с моделями и завершает запрос одним из способов: отрисовать шаблон (render), перенаправить (redirect_to) или вернуть только статус (head). Хороший контроллер короткий: логика живёт в моделях и объектах.",
+  "sections": [
+    {
+      "heading": "Типичный CRUD",
+      "paragraphs": [
+        "Переменные экземпляра (@article) автоматически доступны в шаблоне — так контроллер передаёт данные представлению. Если экшен ничего не отрисовал явно, Rails ищет шаблон с именем экшена."
+      ],
+      "code": "class ArticlesController < ApplicationController\n  def index\n    @articles = Article.order(created_at: :desc).limit(20)\n  end\n\n  def create\n    @article = Article.new(article_params)\n    if @article.save\n      redirect_to @article, notice: \"Статья создана\"\n    else\n      render :new, status: :unprocessable_content\n    end\n  end\n\n  private\n\n  def article_params = params.expect(article: [:title, :body])\nend"
+    },
+    {
+      "heading": "render и redirect_to",
+      "paragraphs": [
+        "render :new рисует шаблон в рамках текущего запроса — переменные экземпляра сохраняются, поэтому форма с ошибками показывает введённые данные. redirect_to отвечает статусом 302 или 303 и адресом, браузер делает новый запрос — это нужно после успешного изменения, чтобы обновление страницы не отправило форму повторно (паттерн Post/Redirect/Get).",
+        "Ошибка, которую делают все: вызвать render или redirect_to дважды за экшен. Они не прерывают метод — нужно писать return или and return. Rails бросит DoubleRenderError.",
+        "Для форм с ошибками важен статус 422 (:unprocessable_content; в старых версиях Rack — :unprocessable_entity): Turbo в Rails 7+ ожидает его, чтобы перерисовать форму, — со статусом 200 ошибки не появятся."
+      ]
+    },
+    {
+      "heading": "Форматы ответа",
+      "paragraphs": [
+        "Один экшен может отвечать HTML-ом, JSON-ом или Turbo Stream — в зависимости от формата запроса. Формат определяется по заголовку Accept или расширению в пути (/articles/5.json)."
+      ],
+      "code": "def show\n  @article = Article.find(params[:id])\n  respond_to do |format|\n    format.html\n    format.json { render json: @article }\n  end\nend\n\ndef destroy\n  Article.find(params[:id]).destroy\n  head :no_content             # только статус 204\nend"
+    },
+    {
+      "heading": "find и 404",
+      "paragraphs": [
+        "Article.find(id) бросает ActiveRecord::RecordNotFound, если записи нет. В production Rails превращает это исключение в ответ 404 — проверять на nil не нужно. find_by(slug: ...) возвращает nil, а find_by! снова бросает исключение."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "Экшен: прочитать params, вызвать модели, завершить render, redirect_to или head. После успешного изменения — редирект, при ошибке формы — render со статусом 422."
+}

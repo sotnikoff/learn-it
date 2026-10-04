@@ -1,0 +1,57 @@
+{
+  "title": "Запросы",
+  "term": "where, scopes и ленивый Relation",
+  "analogy": "заказ собирается, но не отправляется, пока не нужен результат",
+  "plain": "Product.where(...) не идёт в базу — он возвращает объект ActiveRecord::Relation, описание будущего запроса. Условия можно добавлять цепочкой, и SQL выполнится только тогда, когда понадобятся данные: при переборе, выводе в шаблоне, вызове to_a, first или count.",
+  "sections": [
+    {
+      "heading": "Ленивость",
+      "paragraphs": [
+        "В интернет-магазине вы кладёте товары в корзину, меняете количество, применяете промокод — но заказ уходит на склад, только когда вы нажмёте «Оформить». До этого всё — черновик.",
+        "Relation — такой черновик запроса. Цепочка where, order, limit, joins только дополняет его. Запрос отправится в базу при первом обращении к данным. Поэтому в контроллере можно собрать запрос, а выполнится он уже в шаблоне. to_sql показывает итоговый SQL без выполнения."
+      ],
+      "code": "products = Product.where(category: \"чайники\")   # SQL ещё не выполнен\nproducts = products.where(price: ..5000)         # всё ещё нет\nproducts = products.order(price: :asc).limit(10)\nproducts.to_sql\n# => SELECT \"products\".* FROM \"products\"\n#    WHERE \"products\".\"category\" = 'чайники' AND \"products\".\"price\" <= 5000\n#    ORDER BY \"products\".\"price\" ASC LIMIT 10\nproducts.each { ... }                            # вот теперь — запрос"
+    },
+    {
+      "heading": "Условия",
+      "paragraphs": [
+        "Хеш в where превращается в параметризованный SQL: значения передаются отдельно и безопасно экранируются. Диапазон даёт BETWEEN или сравнение, массив — IN, nil — IS NULL. where.not — отрицание, or — объединение условий. Строковые условия пишут только с плейсхолдерами ?, никогда — интерполяцией #{}."
+      ],
+      "code": "Order.where(status: %w[paid shipped])            # IN (...)\nOrder.where(created_at: 1.week.ago..)            # >= ...\nOrder.where.not(cancelled_at: nil)\nOrder.where(status: \"paid\").or(Order.where(total: 10_000..))\nOrder.where(\"total > ? AND note ILIKE ?\", 100, \"%срочно%\")   # безопасно"
+    },
+    {
+      "heading": "Scopes",
+      "paragraphs": [
+        "Часто используемые условия оформляют как scope — именованный кусок запроса. Scopes складываются в цепочки с любыми другими условиями и делают код читаемым: Order.paid.recent вместо двух where."
+      ],
+      "code": "class Order < ApplicationRecord\n  scope :paid,   -> { where(status: \"paid\") }\n  scope :recent, -> { where(created_at: 30.days.ago..) }\n  scope :for_user, ->(user) { where(user:) }\nend\n\nOrder.paid.recent.for_user(current_user).sum(:total)"
+    },
+    {
+      "heading": "Не тащить лишнее",
+      "paragraphs": [
+        "Product.all.map(&:name) загрузит полные объекты всех товаров, чтобы взять одно поле. pluck(:name) выберет из базы только колонку и вернёт массив значений. count, sum, maximum считают в базе, а не в Ruby. exists? проверяет наличие одним дешёвым запросом. select(:id, :name) загружает объекты с частью полей.",
+        "Отдельная ловушка — size, length и count у Relation: count всегда делает SELECT COUNT, length загружает все записи и считает в Ruby, size выбирает сам — если записи уже загружены, считает их, иначе делает COUNT."
+      ]
+    }
+  ],
+  "mapping": [
+    {
+      "tech": "Relation",
+      "real": "Корзина, ещё не оформленная в заказ"
+    },
+    {
+      "tech": "where, order, limit",
+      "real": "Добавить товар, сменить количество"
+    },
+    {
+      "tech": "Выполнение запроса",
+      "real": "Кнопка «Оформить»"
+    },
+    {
+      "tech": "to_sql",
+      "real": "Посмотреть итог корзины до оплаты"
+    }
+  ],
+  "caveat": "Корзина оформляется один раз. Relation кеширует результат после загрузки: повторный перебор того же объекта не пойдёт в базу. Но новый вызов цепочки (products.where(...)) — это новый черновик и новый запрос.",
+  "takeaway": "Запросы ленивые: Relation копит условия до первого обращения к данным. Используйте scopes, pluck и подсчёт в базе и никогда не вставляйте значения в SQL интерполяцией."
+}

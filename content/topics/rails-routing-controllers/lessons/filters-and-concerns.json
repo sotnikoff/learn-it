@@ -1,0 +1,37 @@
+{
+  "title": "Фильтры и общее поведение",
+  "term": "before_action, rescue_from и concerns контроллеров",
+  "analogy": "общие проверки до и после каждого экшена",
+  "plain": "Код, который повторяется в нескольких экшенах (найти запись, проверить вход, задать язык), выносят в колбэки контроллера: before_action, after_action, around_action. rescue_from превращает исключения в аккуратные ответы. Поведение, общее для нескольких контроллеров, выносят в concern или в ApplicationController.",
+  "sections": [
+    {
+      "heading": "before_action",
+      "paragraphs": [
+        "Фильтр вызывается перед экшеном. Если он вызвал render или redirect_to, экшен не выполнится — так работают проверки доступа. Опции only и except ограничивают набор экшенов. skip_before_action отключает унаследованный фильтр в конкретном контроллере."
+      ],
+      "code": "class ArticlesController < ApplicationController\n  before_action :set_article, only: %i[show edit update destroy]\n  before_action :require_author!, only: %i[edit update destroy]\n\n  def show; end\n\n  private\n\n  def set_article\n    @article = Article.find(params[:id])\n  end\n\n  def require_author!\n    redirect_to @article, alert: \"Нет доступа\" unless @article.author == Current.user\n  end\nend"
+    },
+    {
+      "heading": "rescue_from",
+      "paragraphs": [
+        "rescue_from ловит исключение в любом экшене контроллера (и наследников) и передаёт его обработчику. Удобно для доменных ошибок: «оплата отклонена», «нет прав». Важно не ловить слишком общие классы: rescue_from StandardError спрячет все ошибки и превратит их в одинаковые ответы."
+      ],
+      "code": "class ApplicationController < ActionController::Base\n  rescue_from Pundit::NotAuthorizedError, with: :forbidden\n  rescue_from Payments::Declined do |error|\n    redirect_back fallback_location: root_path, alert: error.message\n  end\n\n  private\n\n  def forbidden = head(:forbidden)\nend"
+    },
+    {
+      "heading": "Concerns и ApplicationController",
+      "paragraphs": [
+        "ApplicationController — общий родитель всех контроллеров: туда кладут то, что нужно везде (аутентификация, язык, текущий пользователь). Если поведение нужно лишь части контроллеров — выносят в модуль в app/controllers/concerns, оформленный через ActiveSupport::Concern."
+      ],
+      "code": "# app/controllers/concerns/paginated.rb\nmodule Paginated\n  extend ActiveSupport::Concern\n\n  included do\n    helper_method :page\n  end\n\n  def page = params.fetch(:page, 1).to_i.clamp(1, 1_000)\nend\n\nclass ProductsController < ApplicationController\n  include Paginated\nend"
+    },
+    {
+      "heading": "Где начинается проблема",
+      "paragraphs": [
+        "Цепочка из десяти before_action, часть из которых унаследована, а часть отключена через skip, превращается в загадку: что выполняется перед этим экшеном? Если фильтры начинают зависеть друг от друга по порядку или выставлять переменные, которые нужны другим фильтрам, это сигнал перенести логику в явный объект или метод."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "before_action — для повторяющихся проверок и загрузки записей, rescue_from — для превращения доменных ошибок в ответы. Не стройте длинных цепочек неявных фильтров."
+}

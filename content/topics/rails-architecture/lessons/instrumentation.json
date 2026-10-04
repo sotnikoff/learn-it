@@ -1,0 +1,37 @@
+{
+  "title": "Наблюдаемость",
+  "term": "ActiveSupport::Notifications, события и структурированные логи",
+  "analogy": "Rails сам сообщает обо всём, что делает",
+  "plain": "Каждое значимое действие Rails — SQL-запрос, рендер шаблона, выполнение экшена, задачи, запрос к кешу — публикует событие через ActiveSupport::Notifications. На эти события подписываются логгер, APM-агенты и ваш код. Через тот же механизм можно публиковать свои события. В Rails 8.1 к этому добавился Event Reporter для структурированных бизнес-событий.",
+  "sections": [
+    {
+      "heading": "Подписка на события Rails",
+      "paragraphs": [
+        "События имеют имена вида sql.active_record, process_action.action_controller, perform.active_job, cache_read.active_support. Подписчик получает имя, время начала и конца и полезные данные: SQL, имя контроллера, статус. Так можно, не трогая код приложения, собрать метрики или найти медленные запросы."
+      ],
+      "code": "ActiveSupport::Notifications.subscribe(\"sql.active_record\") do |event|\n  if event.duration > 100\n    Rails.logger.warn(\"Медленный SQL #{event.duration.round}ms: #{event.payload[:sql]}\")\n  end\nend\n\nActiveSupport::Notifications.subscribe(\"process_action.action_controller\") do |event|\n  Metrics.timing(\"request\", event.duration,\n                 tags: { action: \"#{event.payload[:controller]}##{event.payload[:action]}\",\n                         status: event.payload[:status] })\nend"
+    },
+    {
+      "heading": "Свои события",
+      "paragraphs": [
+        "instrument оборачивает блок и публикует событие с длительностью. Это способ развязать код: оформление заказа публикует order.placed, а аналитика, письма и CRM подписываются на него, не зная друг о друге. Подписчики вызываются синхронно в том же потоке — тяжёлую работу они передают в фоновые задачи."
+      ],
+      "code": "ActiveSupport::Notifications.instrument(\"order.placed\", order_id: order.id) do\n  order.place!\nend"
+    },
+    {
+      "heading": "Структурированные логи и Event Reporter",
+      "paragraphs": [
+        "Обычный лог Rails удобен человеку, но плохо разбирается машиной. Для продакшена логи пишут в JSON с request_id, пользователем и другими полями. Rails 8.1 добавил Rails.event: notify публикует событие с данными, tagged и set_context добавляют общие поля, а подписчики (обычно один — отправка в систему логов) получают структурированные записи с тегами, контекстом и местом в коде."
+      ],
+      "code": "Rails.event.set_context(request_id: request.request_id, account_id: Current.account.id)\nRails.event.notify(\"checkout.completed\", order_id: order.id, total_cents: order.total_cents)"
+    },
+    {
+      "heading": "Request ID",
+      "paragraphs": [
+        "Каждый запрос получает идентификатор (заголовок X-Request-Id). Если передавать его в фоновые задачи и вызовы других сервисов и писать во все логи, можно проследить всю цепочку от клика до последней задачи. config.log_tags = [:request_id] добавляет его в каждую строку лога."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "ActiveSupport::Notifications публикует всё, что делает Rails, и ваши события тоже. Для продакшена — структурированные логи с request_id, в Rails 8.1 — через Rails.event."
+}

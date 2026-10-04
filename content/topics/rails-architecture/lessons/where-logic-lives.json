@@ -1,0 +1,37 @@
+{
+  "title": "Где живёт логика",
+  "term": "Толстые модели, сервисы, формы и объекты-запросы",
+  "analogy": "у каждого вида работы — своё место",
+  "plain": "Классический совет Rails — «тонкие контроллеры, толстые модели». На масштабе модель User в три тысячи строк становится свалкой. Логику раскладывают по объектам с одной обязанностью: сервисы для бизнес-операций, формы для сложного ввода, объекты-запросы для сложных выборок, презентеры для отображения. Но это инструменты, а не обязательные слои.",
+  "sections": [
+    {
+      "heading": "Модель — всё ещё центр",
+      "paragraphs": [
+        "Правила, которые касаются одной сущности, остаются в модели: order.pay!, order.cancellable?, user.full_name. Модель — словарь предметной области, и вынос всей логики в сервисы делает её пустой структурой данных, а код — процедурным. В Basecamp и HEY (где родился Rails) модели богатые, а сложность разбивают на concerns и вложенные объекты с понятными именами."
+      ]
+    },
+    {
+      "heading": "Сервисные объекты",
+      "paragraphs": [
+        "Когда операция затрагивает несколько моделей и внешние системы (оформление заказа: резерв товара, оплата, письмо, событие в аналитику), её удобно описать отдельным классом с одним публичным методом. Такой класс легко тестировать, и его видно в структуре проекта. Ловушка — сотни сервисов вида UpdateUserNameService, которые просто вызывают update."
+      ],
+      "code": "# app/services/checkout.rb\nclass Checkout\n  def initialize(cart:, payment_method:)\n    @cart, @payment_method = cart, payment_method\n  end\n\n  def call\n    order = Order.transaction do\n      @cart.reserve_items!\n      Order.create_from_cart!(@cart)\n    end\n    PaymentJob.perform_later(order, @payment_method)\n    order\n  end\nend\n\norder = Checkout.new(cart: Current.cart, payment_method: params[:pm]).call"
+    },
+    {
+      "heading": "Формы и объекты-запросы",
+      "paragraphs": [
+        "Форма-объект — класс с ActiveModel::Model: атрибуты, валидации и метод save, который может создать несколько записей. Подходит для регистрации с компанией, мастеров из нескольких шагов, фильтров. form_with model: работает с ним как с обычной моделью.",
+        "Объект-запрос инкапсулирует сложную выборку: фильтры, сортировки, соединения. Он возвращает Relation, поэтому его можно продолжать цепочкой."
+      ],
+      "code": "class SignupForm\n  include ActiveModel::Model\n  include ActiveModel::Attributes\n\n  attribute :company_name, :string\n  attribute :email, :string\n  attribute :password, :string\n  validates :company_name, :email, :password, presence: true\n\n  def save\n    return false unless valid?\n    ActiveRecord::Base.transaction do\n      account = Account.create!(name: company_name)\n      account.users.create!(email_address: email, password:)\n    end\n  end\nend"
+    },
+    {
+      "heading": "Как выбирать",
+      "paragraphs": [
+        "Не вводите слой ради слоя. Логика одной сущности — модель. Операция с несколькими сущностями и побочными эффектами — сервис или метод модели-«агрегата». Ввод, не совпадающий с моделью, — форма. Сложная выборка, которая повторяется, — scope или объект-запрос. Главное — единообразие внутри проекта: команда должна знать, где искать."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "Логика одной сущности — в модели, операции на несколько сущностей — в сервисах, сложный ввод — в формах. Слои вводят, когда они решают проблему, а не заранее."
+}

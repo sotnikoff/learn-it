@@ -1,0 +1,32 @@
+{
+  "title": "Модели и соглашения",
+  "term": "Active Record: модель = таблица",
+  "analogy": "объект знает свою строку в таблице",
+  "plain": "Active Record — паттерн, в котором объект одновременно хранит данные строки таблицы и умеет сохранять себя в базу. Класс Product автоматически работает с таблицей products, а атрибуты (name, price) Rails берёт из схемы базы при загрузке — в модели их не объявляют.",
+  "sections": [
+    {
+      "heading": "Атрибуты из схемы",
+      "paragraphs": [
+        "Модель может быть пустой: class Product < ApplicationRecord; end. При первом обращении Rails прочитает колонки таблицы products и создаст методы name, name=, price, price= и так далее, с приведением типов: колонка decimal вернёт BigDecimal, timestamp — Time в часовом поясе приложения, boolean — true или false.",
+        "Колонки id, created_at и updated_at Rails заполняет сам. Если нужно увидеть, какие атрибуты есть у модели, — Product.column_names или аннотации в начале файла модели (их добавляют гемы вроде annotaterb)."
+      ],
+      "code": "class Product < ApplicationRecord\nend\n\nproduct = Product.new(name: \"Чайник\", price: \"1990.50\")\nproduct.price          # => 0.199050e4 — BigDecimal, привёл строку\nproduct.new_record?    # => true\nproduct.save           # INSERT INTO products ...\nproduct.persisted?     # => true"
+    },
+    {
+      "heading": "CRUD",
+      "paragraphs": [
+        "create сразу сохраняет, new — только создаёт объект в памяти. find ищет по id и бросает исключение, find_by — по условию и возвращает nil. update меняет атрибуты и сохраняет. destroy удаляет с вызовом коллбэков, delete — одним SQL без них.",
+        "Методы с восклицательным знаком (save!, create!, update!) бросают ActiveRecord::RecordInvalid, если валидации не прошли. Без восклицательного знака они возвращают false. В контроллере с формой удобны версии без «!», а в скриптах, задачах и сервисах — с «!», чтобы ошибка не прошла молча."
+      ],
+      "code": "Product.create!(name: \"Кружка\", price: 300)\nproduct = Product.find(1)\nProduct.find_by(name: \"Кружка\")     # nil, если нет\nproduct.update!(price: 350)\nproduct.destroy"
+    },
+    {
+      "heading": "Когда соглашения не подходят",
+      "paragraphs": [
+        "Если таблица называется не по правилам (наследство старой базы), имя задают явно: self.table_name = \"tbl_goods\". Первичный ключ — self.primary_key. Так Rails можно подключить к чужой базе, но каждое отступление от соглашений — это ещё одна строка, которую нужно помнить."
+      ]
+    }
+  ],
+  "mapping": [],
+  "takeaway": "Модель берёт атрибуты из схемы таблицы. save и create возвращают false при ошибке, save! и create! — бросают исключение: выбирайте осознанно."
+}
