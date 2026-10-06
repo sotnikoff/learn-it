@@ -28,7 +28,7 @@
     "slug": "architecture",
     "title": "Архитектура",
     "description": "Как делить систему на части и сохранять согласованность между ними.",
-    "topics": ["microservices", "sagas", "event-sourcing-cqrs"]
+    "topics": ["hexagonal-architecture", "microservices", "sagas", "event-sourcing-cqrs"]
   },
   {
     "slug": "distributed-systems",
